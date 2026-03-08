@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フレッシュテニスクラブ ピットイン | 富山</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sky: #00aaff;
+      --sky-light: #e0f4ff;
+      --green: #00c853;
+      --green-dark: #009624;
+      --yellow: #ffe000;
+      --orange: #ff6d00;
+      --white: #ffffff;
+      --off-white: #f4fbff;
+      --text: #0a2540;
+      --gray: #5a7080;
+      --card-bg: #ffffff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      background: var(--off-white);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid var(--sky);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 2rem;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--sky);
+      letter-spacing: 0.08em;
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-links { display: flex; gap: 1.8rem; }
+    .nav-links a { font-size: 0.82rem; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: 0.08em; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--sky); }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #00aaff 0%, #0077dd 40%, #00c853 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative circles */
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      top: -200px; right: -200px;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      bottom: -100px; left: -100px;
+    }
+
+    .hero-ball {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounce 1.6s ease-in-out infinite;
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-16px); }
+    }
+
+    .hero-badge {
+      background: var(--yellow);
+      color: var(--text);
+      font-weight: 900;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      padding: 0.4em 1.4em;
+      border-radius: 2em;
+      margin-bottom: 1.2rem;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 13vw, 9rem);
+      color: #fff;
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.8s ease 0.1s both;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+    .hero h1 small {
+      display: block;
+      font-size: 0.38em;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 0.15em;
+    }
+
+    .hero-tagline {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      letter-spacing: 0.06em;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.9s ease 0.2s both;
+    }
+
+    .hero-cta {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 1s ease 0.3s both;
+    }
+
+    .btn-main {
+      background: var(--yellow);
+      color: var(--text);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 900;
+      font-size: 1rem;
+      padding: 0.9em 2.2em;
+      border-radius: 3em;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .btn-main:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 28px rgba(0,0,0,0.2); }
+
+    .btn-sub {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9em 2.2em;
+      border-radius: 3em;
+      text-decoration: none;
+      border: 2px solid rgba(255,255,255,0.6);
+      letter-spacing: 0.06em;
+      transition: background 0.15s;
+    }
+    .btn-sub:hover { background: rgba(255,255,255,0.35); }
+
+    /* Stats bar */
+    .hero-stats {
+      position: relative;
+      z-index: 1;
+      margin-top: 4rem;
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.15);
+      border-radius: 1.2rem;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.3);
+      animation: fadeUp 1s ease 0.4s both;
+      flex-wrap: wrap;
+    }
+    .stat {
+      padding: 1.2rem 2.2rem;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      color: var(--yellow);
+      line-height: 1;
+    }
+    .stat-label { color: rgba(255,255,255,0.8); font-size: 0.7rem; letter-spacing: 0.12em; margin-top: 0.2em; font-weight: 700; }
+
+    /* ─── WAVE DIVIDER ─── */
+    .wave {
+      display: block;
+      width: 100%;
+      height: 80px;
+      margin-bottom: -2px;
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 5rem 1.5rem; }
+    .container { max-width: 880px; margin: 0 auto; }
+    .section-label {
+      display: inline-block;
+      background: var(--sky);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.22em;
+      padding: 0.3em 1em;
+      border-radius: 2em;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.03em;
+      color: var(--text);
+    }
+
+    /* ─── ABOUT ─── */
+    .about { background: var(--white); }
+    .about-intro { font-size: 1rem; color: var(--gray); line-height: 1.9; max-width: 620px; }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
+    .about-card {
+      background: var(--off-white);
+      border-radius: 1.2rem;
+      padding: 1.8rem;
+      border-top: 4px solid var(--sky);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .about-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,170,255,0.12); }
+    .about-card h3 { font-size: 1rem; font-weight: 900; margin-bottom: 0.7rem; color: var(--text); }
+    .about-card p { font-size: 0.9rem; line-height: 1.8; color: var(--gray); }
+
+    /* ─── INFO STRIP ─── */
+    .info-strip {
+      background: linear-gradient(135deg, #0077dd 0%, #00aaff 100%);
+      color: #fff;
+    }
+    .info-strip .section-label { background: var(--yellow); color: var(--text); }
+    .info-strip .section-title { color: #fff; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .info-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 1rem;
+      padding: 1.4rem 1.2rem;
+      border: 1px solid rgba(255,255,255,0.25);
+      text-align: center;
+    }
+    .info-icon { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
+    .info-card dt { font-size: 0.68rem; letter-spacing: 0.15em; color: rgba(255,255,255,0.7); font-weight: 700; margin-bottom: 0.4rem; }
+    .info-card dd { font-size: 0.98rem; font-weight: 700; line-height: 1.5; }
+
+    /* ─── MENU ─── */
+    .menu-section { background: var(--off-white); }
+    .timeline { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 140px; }
+    .timeline::before { content: ''; position: absolute; left: 118px; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, var(--sky), var(--green)); border-radius: 3px; }
+    .t-row { position: relative; padding: 0 0 2rem 2rem; }
+    .t-dot {
+      position: absolute;
+      left: -8px; top: 0.9rem;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--sky);
+      box-shadow: 0 0 0 4px rgba(0,170,255,0.15);
+    }
+    .t-time {
+      position: absolute;
+      left: -140px;
+      top: 0.7rem;
+      width: 120px;
+      text-align: right;
+    }
+    .t-time span {
+      background: var(--sky);
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      padding: 0.2em 0.8em;
+      border-radius: 0.4em;
+    }
+    .t-content { background: var(--white); border-radius: 1rem; padding: 1.2rem 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .t-content h3 { font-weight: 900; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
+    .t-content p { font-size: 0.88rem; color: var(--gray); line-height: 1.7; }
+
+    /* ─── FEE ─── */
+    .fee-section { background: var(--white); }
+    .fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .fee-card {
+      border-radius: 1.4rem;
+      padding: 2rem;
+      text-align: center;
+      border: 2px solid #e0eef6;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .fee-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,170,255,0.12); border-color: var(--sky); }
+    .fee-card.star {
+      background: linear-gradient(135deg, #00aaff 0%, #0077dd 100%);
+      border-color: transparent;
+      color: #fff;
+    }
+    .fee-card.star:hover { box-shadow: 0 12px 30px rgba(0,170,255,0.35); }
+    .fee-emoji { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
+    .fee-amount { font-family: 'Bebas Neue', sans-serif; font-size: 3.2rem; color: var(--yellow); line-height: 1; }
+    .fee-card:not(.star) .fee-amount { color: var(--sky); }
+    .fee-per { font-size: 0.8rem; opacity: 0.7; margin-top: 0.1rem; }
+    .fee-name { font-weight: 900; font-size: 0.95rem; margin-top: 0.8rem; }
+    .fee-note { font-size: 0.82rem; color: var(--gray); text-align: center; margin-top: 1.5rem; line-height: 1.8; }
+
+    /* ─── RECRUIT ─── */
+    .recruit {
+      background: linear-gradient(135deg, #00c853 0%, #00aaff 100%);
+      color: #fff;
+      text-align: center;
+    }
+    .recruit .section-label { background: rgba(255,255,255,0.25); color: #fff; }
+    .recruit .section-title { color: #fff; }
+    .recruit-lead { color: rgba(255,255,255,0.9); font-size: 1rem; line-height: 1.9; max-width: 520px; margin: 0 auto 2rem; }
+    .check-list {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      text-align: left;
+      margin-bottom: 2.5rem;
+      background: rgba(255,255,255,0.15);
+      padding: 1.8rem 2.2rem;
+      border-radius: 1.2rem;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .check-list li { list-style: none; font-size: 0.95rem; display: flex; align-items: center; gap: 0.7rem; font-weight: 700; }
+    .check-list li::before { content: '✓'; background: var(--yellow); color: var(--text); border-radius: 50%; width: 1.4em; height: 1.4em; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 900; flex-shrink: 0; }
+
+    /* ─── CONTACT ─── */
+    .contact-section { background: var(--off-white); text-align: center; }
+    .contact-card {
+      background: var(--white);
+      border-radius: 1.5rem;
+      padding: 3rem 2rem;
+      max-width: 500px;
+      margin: 2rem auto 0;
+      box-shadow: 0 8px 40px rgba(0,170,255,0.1);
+      border: 2px solid var(--sky-light);
+    }
+    .contact-card p { font-size: 0.92rem; color: var(--gray); line-height: 1.9; margin-bottom: 1.5rem; }
+    .contact-email-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, #00aaff, #0077dd);
+      color: #fff;
+      font-weight: 900;
+      font-size: 1rem;
+      padding: 0.85em 2em;
+      border-radius: 3em;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(0,170,255,0.3);
+    }
+    .contact-email-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,170,255,0.4); }
+    .contact-fb { margin-top: 1.5rem; font-size: 0.82rem; color: var(--gray); }
+    .contact-fb a { color: var(--sky); font-weight: 700; text-decoration: none; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--text);
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 640px) {
+      .about-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 0; }
+      .stat { padding: 1rem 1.4rem; }
+      .timeline { padding-left: 0; }
+      .timeline::before { display: none; }
+      .t-time { position: static; text-align: left; margin-bottom: 0.5rem; }
+      .t-row { padding-left: 0; }
+      .t-dot { display: none; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PIT<span>INN</span></div>
+  <div class="nav-links">
+    <a href="#about">クラブについて</a>
+    <a href="#menu">練習内容</a>
+    <a href="#fee">料金</a>
+    <a href="#contact">お問い合わせ</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-ball">🎾</div>
+  <div class="hero-badge">🏟 FRESH TENNIS CLUB · TOYAMA SINCE 2003</div>
+  <h1>
+    <small>フレッシュテニスクラブ</small>
+    PIT INN
+  </h1>
+  <p class="hero-tagline">毎週火・金 19:00〜21:00 ／ 富山市 光陽小学校体育館</p>
+  <div class="hero-cta">
+    <a href="#contact" class="btn-main">🏓 参加を問い合わせる</a>
+    <a href="#about" class="btn-sub">クラブについて</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">2003</div><div class="stat-label">FOUNDED</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">COURTS</div></div>
+    <div class="stat"><div class="stat-num">¥100</div><div class="stat-label">PER SESSION</div></div>
+    <div class="stat"><div class="stat-num">2×</div><div class="stat-label">WEEKLY</div></div>
+  </div>
+</section>
+
+<!-- WAVE -->
+<svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="background:#0077dd; display:block;">
+  <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff"/>
+</svg>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="container">
+    <span class="section-label">ABOUT</span>
+    <h2 class="section-title">フレッシュテニス好き、<br>集まれ！</h2>
+    <p class="about-intro">ピットインは、富山市で2003年から続くフレッシュテニスサークルです。中上級レベルの仲間たちが週2回集まり、練習と試合形式のゲームを楽しんでいます。「とにかく楽しくプレーする」をモットーに、ラケットスポーツが好きな方なら大歓迎！</p>
+    <div class="about-grid">
+      <div class="about-card"><h3>🎯 対象レベル</h3><p>中上級者向けのサークルです。フレッシュテニス未経験でも、硬式・軟式テニス、バドミントン、卓球などのラケットスポーツ経験者は歓迎します。</p></div>
+      <div class="about-card"><h3>😄 雰囲気</h3><p>スポーツマンシップを大切にした、フレンドリーな雰囲気が自慢です。スピンボールをガンガン打っても参加料は変わりません（笑）</p></div>
+      <div class="about-card"><h3>📅 開催日時</h3><p>毎週<strong>火曜日・金曜日</strong>の19:00〜21:00。富山市立 光陽小学校 体育館で開催しています。</p></div>
+      <div class="about-card"><h3>🏟 コート</h3><p>体育館内のコート3面を使用。比較的明るく、ボールが見えやすい環境でプレーできます。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INFO STRIP -->
+<section class="info-strip">
+  <div class="container">
+    <span class="section-label">QUICK INFO</span>
+    <h2 class="section-title">基本情報</h2>
+    <div class="info-grid">
+      <dl class="info-card"><span class="info-icon">📍</span><dt>場所</dt><dd>富山市立<br>光陽小学校 体育館</dd></dl>
+      <dl class="info-card"><span class="info-icon">🗓</span><dt>開催曜日</dt><dd>毎週<br>火・金曜日</dd></dl>
+      <dl class="info-card"><span class="info-icon">🕖</span><dt>時間</dt><dd>19:00 〜<br>21:00</dd></dl>
+      <dl class="info-card"><span class="info-icon">💴</span><dt>参加料</dt><dd>1回 100円<br><small style="opacity:0.65; font-size:0.82rem">半年・年間割引あり</small></dd></dl>
+      <dl class="info-card"><span class="info-icon">📩</span><dt>問い合わせ</dt><dd><a href="mailto:gamaken3@gmail.com" style="color:var(--yellow)">gamaken3@<br>gmail.com</a></dd></dl>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div class="container">
+    <span class="section-label">PROGRAM</span>
+    <h2 class="section-title">練習メニュー</h2>
+    <div class="timeline">
+      <div class="t-row">
+        <div class="t-time"><span>19:00</span></div>
+        <div class="t-dot"></div>
+        <div class="t-content"><h3>集合・準備体操</h3><p>体育館に集合してウォームアップ。</p></div>
+      </div>
+      <div class="t-row">
+        <div class="t-time"><span>19:10</span></div>
+        <div class="t-dot"></div>
+        <div class="t-content"><h3>基本練習（約30分）</h3><p>各コートに分かれて、ストローク・ボレー（前後 / ミドル）・スマッシュの練習を行います。</p></div>
+      </div>
+      <div class="t-row">
+        <div class="t-time"><span>19:40</span></div>
+        <div class="t-dot"></div>
+        <div class="t-content"><h3>試合形式の練習（約80分）</h3><p>ペア決めアプリによるマッチングで、毎回フレッシュな組み合わせでゲームを楽しみます。大会前はペア固定での練習も対応。</p></div>
+      </div>
+      <div class="t-row">
+        <div class="t-time"><span>21:00</span></div>
+        <div class="t-dot" style="border-color:var(--green)"></div>
+        <div class="t-content"><h3>終了・片付け</h3><p>コートを片付けて解散です。お疲れさまでした！</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEE -->
+<section class="fee-section" id="fee">
+  <div class="container">
+    <span class="section-label">FEE</span>
+    <h2 class="section-title">参加料金</h2>
+    <div class="fee-grid">
+      <div class="fee-card star">
+        <span class="fee-emoji">🎾</span>
+        <div class="fee-amount">¥100</div>
+        <div class="fee-per">1回あたり</div>
+        <div class="fee-name">都度払い</div>
+      </div>
+      <div class="fee-card">
+        <span class="fee-emoji">📅</span>
+        <div class="fee-amount">割引</div>
+        <div class="fee-per">要相談</div>
+        <div class="fee-name">半年パス</div>
+      </div>
+      <div class="fee-card">
+        <span class="fee-emoji">🏆</span>
+        <div class="fee-amount">割引</div>
+        <div class="fee-per">要相談</div>
+        <div class="fee-name">年間パス</div>
+      </div>
+    </div>
+    <p class="fee-note">※ どんなにスピンボールを打ってボールを削っても参加料は同じです 😄<br>半年・年間パスの料金はお気軽にご相談ください。</p>
+  </div>
+</section>
+
+<!-- RECRUIT -->
+<section class="recruit" id="recruit">
+  <div class="container">
+    <span class="section-label">JOIN US</span>
+    <h2 class="section-title">新メンバー募集中！</h2>
+    <p class="recruit-lead">一緒にフレッシュテニスを楽しみませんか？<br>以下に当てはまる方はぜひご連絡ください。</p>
+    <ul class="check-list">
+      <li>フレッシュテニスが好きで、もっと練習したい</li>
+      <li>硬式・軟式テニス、バドミントン、卓球などの経験がある</li>
+      <li>週1〜2回、夜の時間に参加できる</li>
+      <li>マナーを大切にフェアプレーができる</li>
+      <li>富山市内またはその周辺に在住・在勤</li>
+    </ul>
+    <a href="#contact" class="btn-main" style="font-size:1.05rem;">まずはメールで問い合わせる →</a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="container">
+    <span class="section-label">CONTACT</span>
+    <h2 class="section-title">お問い合わせ</h2>
+    <div class="contact-card">
+      <p>参加ご希望の方、見学希望の方など、<br>お気軽にメールでご連絡ください。<br><strong>担当：松本</strong></p>
+      <a href="mailto:gamaken3@gmail.com" class="contact-email-btn">✉ gamaken3@gmail.com</a>
+      <p class="contact-fb">Facebookページもあります 👉<br>
+        <a href="https://www.facebook.com/フレッシュテニスクラブ-ピットイン-101527764683152/" target="_blank">フレッシュテニスクラブ ピットイン</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 フレッシュテニスクラブ ピットイン ／ 富山市</p>
+</footer>
+
+</body>
+</html>
