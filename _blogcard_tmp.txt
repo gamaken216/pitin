@@ -1,0 +1,7 @@
+      <a class="blog-card" href="blog/20260308.html">
+        <div class="blog-date">2026年3月8日</div>
+        <h3>2026年新会員大募集！</h3>
+        <img src="260308.jpg" alt="練習風景" style="width:100%; border-radius:0.8rem; margin:0.5rem 0; object-fit:cover; max-height:180px;">
+        <p>2026年ピットインでは新会員を大募集いたします。今年から方針を大きく変更して、新しいクラブづくり、新メンバーの育成に力を入れていきたいと思います。</p>
+        <span class="blog-more">続きを読む →</span>
+      </a>
