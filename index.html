@@ -7,17 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root {
-      --sky: #00aaff;
-      --sky-light: #e0f4ff;
-      --green: #00c853;
-      --green-dark: #009624;
-      --yellow: #ffe000;
-      --orange: #ff6d00;
-      --white: #ffffff;
-      --off-white: #f4fbff;
-      --text: #0a2540;
-      --gray: #5a7080;
-      --card-bg: #ffffff;
+      --sky: #00aaff; --sky-light: #e0f4ff; --green: #00c853; --green-dark: #009624;
+      --yellow: #ffe000; --orange: #ff6d00; --white: #ffffff; --off-white: #f4fbff;
+      --text: #0a2540; --gray: #5a7080; --card-bg: #ffffff;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Zen Kaku Gothic New', sans-serif; background: var(--off-white); color: var(--text); overflow-x: hidden; }
@@ -77,14 +69,11 @@
     .t-content h3 { font-weight: 900; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
     .t-content p { font-size: 0.88rem; color: var(--gray); line-height: 1.7; }
     .fee-section { background: var(--white); }
-    .fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
     .fee-card { border-radius: 1.4rem; padding: 2rem; text-align: center; border: 2px solid #e0eef6; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
-    .fee-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,170,255,0.12); border-color: var(--sky); }
     .fee-card.star { background: linear-gradient(135deg, #00aaff 0%, #0077dd 100%); border-color: transparent; color: #fff; }
     .fee-card.star:hover { box-shadow: 0 12px 30px rgba(0,170,255,0.35); }
     .fee-emoji { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
     .fee-amount { font-family: 'Bebas Neue', sans-serif; font-size: 3.2rem; color: var(--yellow); line-height: 1; }
-    .fee-card:not(.star) .fee-amount { color: var(--sky); }
     .fee-per { font-size: 0.8rem; opacity: 0.7; margin-top: 0.1rem; }
     .fee-name { font-weight: 900; font-size: 0.95rem; margin-top: 0.8rem; }
     .fee-note { font-size: 0.82rem; color: var(--gray); text-align: center; margin-top: 1.5rem; line-height: 1.8; }
@@ -188,7 +177,7 @@
       <dl class="info-card"><span class="info-icon">📍</span><dt>場所</dt><dd>富山市立<br>光陽小学校 体育館</dd></dl>
       <dl class="info-card"><span class="info-icon">🗓</span><dt>開催曜日</dt><dd>毎週<br>火・金曜日</dd></dl>
       <dl class="info-card"><span class="info-icon">🕖</span><dt>時間</dt><dd>19:00 〜<br>21:00</dd></dl>
-      <dl class="info-card"><span class="info-icon">💴</span><dt>参加料</dt><dd>1回 100円<br><small style="opacity:0.65; font-size:0.82rem">半年・年間割引あり</small></dd></dl>
+      <dl class="info-card"><span class="info-icon">💴</span><dt>参加料</dt><dd>1回 100円</dd></dl>
       <dl class="info-card"><span class="info-icon">📩</span><dt>問い合わせ</dt><dd><a href="mailto:gamaken3@gmail.com" style="color:var(--yellow)">gamaken3@<br>gmail.com</a></dd></dl>
     </div>
   </div>
@@ -211,12 +200,15 @@
   <div class="container">
     <span class="section-label">FEE</span>
     <h2 class="section-title">参加料金</h2>
-    <div class="fee-grid">
-      <div class="fee-card star"><span class="fee-emoji">🎾</span><div class="fee-amount">¥100</div><div class="fee-per">1回あたり</div><div class="fee-name">都度払い</div></div>
-      <div class="fee-card"><span class="fee-emoji">📅</span><div class="fee-amount">割引</div><div class="fee-per">要相談</div><div class="fee-name">半年パス</div></div>
-      <div class="fee-card"><span class="fee-emoji">🏆</span><div class="fee-amount">割引</div><div class="fee-per">要相談</div><div class="fee-name">年間パス</div></div>
+    <div style="text-align:center; margin-top:2rem;">
+      <div class="fee-card star" style="display:inline-block; min-width:240px;">
+        <span class="fee-emoji">🎾</span>
+        <div class="fee-amount">¥100</div>
+        <div class="fee-per">1回あたり</div>
+        <div class="fee-name">参加のたびにお支払い</div>
+      </div>
     </div>
-    <p class="fee-note">※ どんなにスピンボールを打ってボールを削っても参加料は同じです 😄<br>半年・年間パスの料金はお気軽にご相談ください。</p>
+    <p class="fee-note">※ どんなにスピンボールを打ってボールを削っても参加料は同じです 😄</p>
   </div>
 </section>
 
@@ -244,7 +236,7 @@
       <p>参加ご希望の方、見学希望の方など、<br>お気軽にメールでご連絡ください。<br><strong>担当：松本</strong></p>
       <a href="mailto:gamaken3@gmail.com" class="contact-email-btn">✉ gamaken3@gmail.com</a>
       <p class="contact-fb">Facebookページもあります 👉<br>
-        <a href="https://www.facebook.com/フレッシュテニスクラブ-ピットイン-101527764683152/" target="_blank">フレッシュテニスクラブ ピットイン</a>
+        <a href="https://www.facebook.com/%E3%83%95%E3%83%AC%E3%83%83%E3%82%B7%E3%83%A5%E3%83%86%E3%83%8B%E3%82%B9%E3%82%AF%E3%83%A9%E3%83%96-%E3%83%94%E3%83%83%E3%83%88%E3%82%A4%E3%83%B3-101527764683152/" target="_blank">フレッシュテニスクラブ ピットイン</a>
       </p>
     </div>
   </div>
@@ -255,19 +247,19 @@
     <span class="section-label">BLOG</span>
     <h2 class="section-title">活動ブログ</h2>
     <div class="blog-grid">
-      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/2024年もやってますよ！" target="_blank">
+      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/2024%E5%B9%B4%E3%82%82%E3%82%84%E3%81%A3%E3%81%A6%E3%81%BE%E3%81%99%E3%82%88%EF%BC%81" target="_blank">
         <div class="blog-date">2024年2月22日</div>
         <h3>2024年もやってます！</h3>
         <p>久しぶりの投稿。なんと、2021年に書いていたこのブログを読んで今週参加された方がいらっしゃったので、あまりにもびっくり＆嬉しくてブログを再開しちゃいました。ピットインはずーーーっと続いています。</p>
         <span class="blog-more">続きを読む →</span>
       </a>
-      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/1月19日" target="_blank">
+      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/1%E6%9C%8819%E6%97%A5" target="_blank">
         <div class="blog-date">2021年1月20日</div>
         <h3>1月19日</h3>
         <p>1月5日の初打ち以来、久しぶりのフレッシュテニス。大雪が降っても参加希望者４人いたので集まろうということになったのですが…</p>
         <span class="blog-more">続きを読む →</span>
       </a>
-      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/12月25日" target="_blank">
+      <a class="blog-card" href="https://mats382.wixsite.com/pitinn/post/12%E6%9C%8825%E6%97%A5" target="_blank">
         <div class="blog-date">2020年12月26日</div>
         <h3>12月25日</h3>
         <p>今日が今年最後の練習日。9人が参加してくれました。金曜日のクリスマスで参加者が少なかったら中止でいいやと思いきや、結構集まってくれました。</p>
