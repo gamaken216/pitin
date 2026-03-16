@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ダブルス組み合わせアプリ | フレッシュテニスクラブ ピットイン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sky: #00aaff; --sky-light: #e0f4ff; --green: #00c853; --green-dark: #009624;
+      --yellow: #ffe000; --orange: #ff6d00; --white: #ffffff; --off-white: #f4fbff;
+      --text: #0a2540; --gray: #5a7080; --card-bg: #ffffff;
+      --app-green: #2d7a3a; --app-lime: #a8e63d; --app-dark: #0f1a0f;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Zen Kaku Gothic New', sans-serif; background: var(--off-white); color: var(--text); }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 2px solid var(--sky); display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 2rem; }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--sky); letter-spacing: 0.08em; text-decoration: none; }
+    .nav-logo span { color: var(--green); }
+    .nav-back { font-size: 0.85rem; font-weight: 700; color: var(--gray); text-decoration: none; letter-spacing: 0.06em; display: flex; align-items: center; gap: 0.4rem; transition: color 0.15s; }
+    .nav-back:hover { color: var(--sky); }
+
+    /* HERO */
+    .hero {
+      min-height: 38vh;
+      background: linear-gradient(135deg, var(--app-dark) 0%, #1a3a1a 50%, #0f2a0f 100%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; padding: 7rem 2rem 3rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before { content: ''; position: absolute; width: 500px; height: 500px; border-radius: 50%; background: rgba(168,230,61,.06); top: -150px; right: -100px; }
+    .hero-badge { background: var(--app-lime); color: var(--app-dark); font-weight: 900; font-size: 0.72rem; letter-spacing: 0.22em; padding: 0.4em 1.4em; border-radius: 2em; margin-bottom: 1rem; }
+    .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 8vw, 5rem); color: var(--app-lime); letter-spacing: 0.06em; line-height: 1; margin-bottom: 0.6rem; }
+    .hero p { color: rgba(255,255,255,0.75); font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+
+    /* MAIN */
+    .main { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+    /* SCREENSHOT */
+    .screenshot-wrap {
+      background: var(--app-dark);
+      border-radius: 1.4rem;
+      padding: 1.2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+      border: 2px solid var(--app-green);
+      text-align: center;
+    }
+    .screenshot-wrap img {
+      width: 100%; max-width: 700px;
+      border-radius: 0.8rem;
+      display: block; margin: 0 auto;
+    }
+    .screenshot-caption {
+      color: rgba(168,230,61,0.7);
+      font-size: 0.78rem;
+      margin-top: 0.8rem;
+      letter-spacing: 0.08em;
+    }
+
+    /* FEATURES */
+    .section-label { display: inline-block; background: var(--sky); color: #fff; font-size: 0.68rem; font-weight: 900; letter-spacing: 0.22em; padding: 0.3em 1em; border-radius: 2em; margin-bottom: 0.8rem; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 1.5rem; color: var(--text); }
+
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+    .feature-card {
+      background: var(--white);
+      border-radius: 1.2rem;
+      padding: 1.5rem;
+      border-top: 4px solid var(--app-lime);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(45,122,58,.12); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 0.6rem; display: block; }
+    .feature-card h3 { font-size: 0.95rem; font-weight: 900; margin-bottom: 0.5rem; color: var(--text); }
+    .feature-card p { font-size: 0.86rem; line-height: 1.8; color: var(--gray); }
+
+    /* HOW TO USE */
+    .howto { background: var(--white); border-radius: 1.4rem; padding: 2rem; margin-bottom: 2.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .howto ol { padding-left: 1.4rem; }
+    .howto li { font-size: 0.95rem; line-height: 2; color: var(--gray); }
+    .howto li strong { color: var(--text); }
+
+    /* DOWNLOAD BOX */
+    .download-box {
+      background: linear-gradient(135deg, var(--app-dark) 0%, #1a3a1a 100%);
+      border-radius: 1.6rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      border: 2px solid var(--app-lime);
+      box-shadow: 0 8px 32px rgba(45,122,58,.2);
+    }
+    .download-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--app-lime); letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+    .download-box p { color: rgba(255,255,255,0.75); font-size: 0.9rem; margin-bottom: 1.8rem; line-height: 1.8; }
+    .btn-download {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: var(--app-lime);
+      color: var(--app-dark);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-weight: 900; font-size: 1.1rem;
+      padding: 0.9em 2.5em;
+      border-radius: 3em;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 18px rgba(168,230,61,.4);
+    }
+    .btn-download:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 28px rgba(168,230,61,.5); }
+    .download-note { color: rgba(255,255,255,0.45); font-size: 0.78rem; margin-top: 1rem; line-height: 1.8; }
+
+    /* BACK LINK */
+    .back-wrap { text-align: center; margin-top: 3rem; }
+    .back-wrap a { color: var(--sky); font-size: 0.9rem; font-weight: 700; text-decoration: none; }
+    .back-wrap a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2.4rem; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PIT<span>IN</span></a>
+  <a href="index.html" class="nav-back">← ホームに戻る</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🎾 FREE APP · NO INSTALL REQUIRED</div>
+  <h1>DOUBLES MATCHER</h1>
+  <p>フレッシュテニスのダブルスペア 自動組み合わせアプリ</p>
+</div>
+
+<div class="main">
+
+  <!-- スクリーンショット -->
+  <div class="screenshot-wrap">
+    <img src="app-screenshot.png" alt="ダブルス組み合わせアプリのスクリーンショット">
+    <div class="screenshot-caption">▲ アプリの画面イメージ（クリックで拡大）</div>
+  </div>
+
+  <!-- 概要説明 -->
+  <span class="section-label">ABOUT</span>
+  <h2 class="section-title">アプリの概要</h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🎲</span>
+      <h3>ワンタップで組み合わせ生成</h3>
+      <p>参加者を選んでボタンを押すだけで、コートごとのダブルスペアを自動で組み合わせます。</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚖️</span>
+      <h3>公平なローテーション</h3>
+      <p>待機回数・ペア履歴を記録し、同じ組み合わせや偏りが出ないよう自動調整します。</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚥</span>
+      <h3>性別モード対応</h3>
+      <p>フリー・混合優先・男女別・バランス型の4モードから練習スタイルに合わせて選択できます。</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔗</span>
+      <h3>URLでメンバー共有</h3>
+      <p>登録メンバーをURLに埋め込んでLINEなどで共有。どの端末からでも同じメンバーで使えます。</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📋</span>
+      <h3>試合履歴を記録</h3>
+      <p>ラウンドごとの組み合わせと待機メンバーを履歴に自動保存。ラウンド数・試合数も集計します。</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📱</span>
+      <h3>スマホ対応</h3>
+      <p>スマートフォン・タブレット・PCどれでも使えます。インストール不要、ブラウザだけで動作します。</p>
+    </div>
+  </div>
+
+  <!-- 使い方 -->
+  <div class="howto">
+    <span class="section-label" style="background:var(--green);">HOW TO USE</span>
+    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin:0.6rem 0 1rem;letter-spacing:0.04em;">使い方</h3>
+    <ol>
+      <li><strong>ダウンロード</strong>：下のボタンからHTMLファイルをダウンロードします。</li>
+      <li><strong>ブラウザで開く</strong>：ダウンロードしたファイルをブラウザ（Chrome・Safari等）でそのまま開きます。</li>
+      <li><strong>メンバー登録</strong>：「メンバー」タブから名前・レベル・性別を登録します。</li>
+      <li><strong>参加者を選択</strong>：「試合」タブで本日の参加者にチェックを入れます。</li>
+      <li><strong>組み合わせ生成</strong>：「組み合わせを生成」ボタンを押すだけ！</li>
+    </ol>
+    <p style="font-size:0.82rem;color:var(--gray);margin-top:1rem;">※ データはブラウザのローカルストレージに保存されます。アプリを閉じてもメンバー情報や履歴は保持されます。</p>
+  </div>
+
+  <!-- ダウンロードボックス -->
+  <div class="download-box">
+    <h2>🎾 FREE DOWNLOAD</h2>
+    <p>
+      どなたでも無料でご利用いただけます。<br>
+      HTMLファイル1つをダウンロードするだけで、すぐにお使いいただけます。
+    </p>
+    <a href="tennis-doubles.html" download="tennis-doubles.html" class="btn-download">
+      ⬇︎ アプリをダウンロード
+    </a>
+    <p class="download-note">
+      ファイルサイズ：約50KB　／　対応ブラウザ：Chrome / Safari / Firefox / Edge<br>
+      インストール不要・会員登録不要・完全無料
+    </p>
+  </div>
+
+  <div class="back-wrap">
+    <a href="index.html">← ピットイン ホームページに戻る</a>
+  </div>
+
+</div>
+
+</body>
+</html>
