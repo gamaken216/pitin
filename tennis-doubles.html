@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎾 テニス ダブルス組み合わせ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+:root {
+  --green:#2d7a3a; --lime:#a8e63d; --yellow:#f5e642; --dark:#0f1a0f;
+  --card:#1a2e1a; --border:#2d4a2d; --text:#e8f5e8; --muted:#7a9a7a;
+  --red:#e05050; --orange:#f0a030; --blue:#4a8abf; --purple:#8a5abf;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--dark);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:16px;min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 20%,rgba(45,122,58,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(168,230,61,.08) 0%,transparent 50%);}
+header{background:linear-gradient(135deg,var(--green) 0%,#1a4a1a 100%);padding:18px 22px;border-bottom:3px solid var(--lime);display:flex;align-items:center;gap:12px;}
+header h1{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:3px;color:var(--lime);text-shadow:0 2px 8px rgba(0,0,0,.5);}
+.ball-icon{font-size:2.2rem;animation:bounce 2s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.container{max-width:960px;margin:0 auto;padding:16px;}
+
+.tabs{display:flex;gap:4px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:20px;border:1px solid var(--border);}
+.tab-btn{flex:1;padding:11px 4px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.tab-btn.active{background:var(--green);color:var(--lime);box-shadow:0 2px 8px rgba(45,122,58,.5);}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
+.card-title{font-size:0.88rem;font-weight:700;letter-spacing:2px;color:var(--lime);text-transform:uppercase;margin-bottom:14px;}
+
+input[type=text],input[type=number]{background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:1rem;padding:10px 13px;outline:none;transition:border-color .2s;}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--lime);}
+input[type=text]{min-width:80px;} input[type=number]{width:68px;}
+select{background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:1rem;padding:9px 11px;outline:none;}
+
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-primary{background:var(--lime);color:var(--dark);padding:10px 18px;font-size:1rem;}
+.btn-primary:hover{background:#c0f050;transform:translateY(-1px);}
+.btn-generate{background:linear-gradient(135deg,var(--lime),#7ab830);color:var(--dark);padding:15px 24px;font-size:1.2rem;font-weight:900;border-radius:12px;width:100%;justify-content:center;letter-spacing:1px;}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(168,230,61,.4);}
+.btn-sm{padding:5px 11px;font-size:0.88rem;background:var(--border);color:var(--muted);}
+.btn-sm:hover{background:var(--red);color:#fff;}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--muted);padding:9px 15px;font-size:0.95rem;}
+.btn-secondary:hover{border-color:var(--lime);color:var(--lime);}
+.btn-orange{background:var(--orange);color:var(--dark);padding:10px 18px;font-size:1rem;}
+.btn-blue{background:rgba(74,138,191,.3);border:1px solid var(--blue);color:#aadaff;padding:9px 15px;font-size:0.95rem;}
+.btn-blue:hover{background:rgba(74,138,191,.5);}
+.btn-red{background:rgba(224,80,80,.3);border:1px solid var(--red);color:#ffaaaa;padding:9px 15px;font-size:0.95rem;}
+.btn-red:hover{background:rgba(224,80,80,.5);}
+
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:7px;}
+.member-list-sortable{display:flex;flex-direction:column;gap:7px;}
+.member-row{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:8px;transition:border-color .2s,opacity .2s,transform .15s;cursor:default;}
+.member-row:hover{border-color:var(--border);}
+.member-row.dragging{opacity:.4;transform:scale(.97);}
+.member-row.drag-over{border-color:var(--lime);background:rgba(168,230,61,.08);}
+.drag-handle{color:var(--muted);font-size:1.2rem;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;touch-action:none;}
+.drag-handle:active{cursor:grabbing;}
+.member-chip{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:6px;transition:border-color .2s;}
+.member-chip.attending{border-color:var(--green);background:rgba(45,122,58,.15);}
+.member-chip .mname{font-size:1rem;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.level-badge{font-size:0.8rem;padding:3px 7px;border-radius:4px;font-weight:700;flex-shrink:0;}
+.level-1{background:#3a6a8a;color:#aadaff;} .level-2{background:#3a7a3a;color:#aaff9a;}
+.level-3{background:#7a6a1a;color:#ffd86a;} .level-4{background:#7a3a1a;color:#ffaa6a;} .level-5{background:#6a1a1a;color:#ffaaaa;}
+.attend-toggle{width:24px;height:24px;border-radius:50%;border:2px solid var(--muted);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.8rem;transition:all .2s;background:transparent;}
+.attend-toggle.on{border-color:var(--lime);background:var(--lime);color:var(--dark);}
+
+.input-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.settings-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px;}
+.setting-item{display:flex;align-items:center;gap:8px;font-size:0.95rem;color:var(--muted);}
+.setting-item label{font-weight:700;white-space:nowrap;}
+.toggle{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s;}
+.toggle.on::after{transform:translateX(20px);}
+
+.inline-add{background:rgba(168,230,61,.06);border:1px dashed var(--lime);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+.inline-add-title{font-size:0.88rem;font-weight:700;color:var(--lime);letter-spacing:1px;margin-bottom:8px;}
+
+.courts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:14px;}
+.court-card{background:var(--dark);border:2px solid var(--green);border-radius:16px;overflow:hidden;animation:slideIn .4s ease forwards;opacity:0;transform:translateY(20px);}
+@keyframes slideIn{to{opacity:1;transform:translateY(0);}}
+.court-header{background:var(--green);padding:9px 15px;display:flex;justify-content:space-between;align-items:center;}
+.court-name{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--lime);}
+.court-body{padding:14px;}
+.team{background:var(--card);border-radius:10px;padding:10px 13px;margin-bottom:8px;}
+.team-label{font-size:0.82rem;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+.team-players{display:flex;gap:7px;flex-wrap:wrap;}
+.player-tag{background:rgba(45,122,58,.3);border:1px solid var(--green);border-radius:20px;padding:6px 14px;font-size:1.05rem;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer;transition:all .15s;user-select:none;}
+.player-tag:hover{background:rgba(45,122,58,.55);}
+.player-tag.sel{background:rgba(245,230,66,.25);border-color:var(--yellow);box-shadow:0 0 0 2px rgba(245,230,66,.4);animation:glow .9s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px rgba(245,230,66,.4);}50%{box-shadow:0 0 0 5px rgba(245,230,66,0);}}
+.vs-divider{text-align:center;font-family:'Bebas Neue',cursive;font-size:1.4rem;color:var(--yellow);letter-spacing:4px;margin:4px 0;}
+.warn-msg{font-size:0.85rem;color:var(--orange);margin-top:5px;}
+.warn-excl{font-size:0.85rem;color:var(--red);margin-top:5px;}
+
+.waiting-section{background:rgba(240,160,48,.1);border:1px solid var(--orange);border-radius:12px;padding:12px 16px;margin-bottom:14px;}
+.waiting-title{font-size:0.88rem;font-weight:700;letter-spacing:2px;color:var(--orange);margin-bottom:8px;}
+.waiting-players{display:flex;flex-wrap:wrap;gap:8px;}
+.waiting-tag{background:rgba(240,160,48,.15);border:1px solid var(--orange);border-radius:20px;padding:6px 14px;font-size:1rem;font-weight:700;color:var(--orange);cursor:pointer;transition:all .15s;user-select:none;}
+.waiting-tag:hover{background:rgba(240,160,48,.35);}
+.waiting-tag.sel{background:rgba(245,230,66,.25);border-color:var(--yellow);box-shadow:0 0 0 2px rgba(245,230,66,.4);animation:glow .9s ease-in-out infinite;}
+
+.swap-bar{background:rgba(245,230,66,.1);border:1px solid rgba(245,230,66,.4);border-radius:10px;padding:11px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.swap-bar-text{font-size:0.95rem;color:var(--yellow);font-weight:700;}
+
+.pair-rule-list{display:flex;flex-direction:column;gap:8px;}
+.pair-rule-item{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.pair-rule-names{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.pair-rule-badge{font-size:0.8rem;padding:3px 8px;border-radius:4px;font-weight:700;}
+.badge-fixed{background:rgba(74,138,191,.3);border:1px solid var(--blue);color:#aadaff;}
+.badge-excl{background:rgba(224,80,80,.3);border:1px solid var(--red);color:#ffaaaa;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stat-box{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;}
+.stat-num{font-family:'Bebas Neue',cursive;font-size:2.4rem;color:var(--lime);line-height:1;}
+.stat-label{font-size:0.88rem;color:var(--muted);margin-top:4px;}
+.round-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.round-badge{background:var(--green);color:var(--lime);font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:2px;padding:5px 13px;border-radius:6px;}
+.history-item{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:8px;}
+.history-round{font-size:0.85rem;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:1px;}
+.qr-note{background:rgba(168,230,61,.08);border:1px dashed var(--lime);border-radius:10px;padding:11px;font-size:0.9rem;color:var(--muted);text-align:center;margin-top:10px;}
+.share-bar{background:rgba(168,230,61,.07);border:1px solid rgba(168,230,61,.3);border-radius:12px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.share-url-box{background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.8rem;color:var(--muted);word-break:break-all;margin-top:8px;cursor:pointer;transition:border-color .2s;}
+.share-url-box:hover{border-color:var(--lime);}
+.share-copied{color:var(--lime);font-size:0.85rem;font-weight:700;display:none;}
+.btn-share{background:linear-gradient(135deg,rgba(168,230,61,.25),rgba(168,230,61,.1));border:1px solid var(--lime);color:var(--lime);padding:10px 18px;font-size:0.95rem;border-radius:8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s;}
+.btn-share:hover{background:rgba(168,230,61,.35);transform:translateY(-1px);}
+.empty-state{text-align:center;padding:32px 16px;color:var(--muted);}
+.empty-icon{font-size:2.8rem;margin-bottom:8px;}
+.gender-radio{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:0.92rem;color:var(--text);background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:7px 13px;transition:all .15s;}
+.gender-radio input{accent-color:var(--lime);width:15px;height:15px;cursor:pointer;}
+.gender-radio:has(input:checked){border-color:var(--lime);background:rgba(168,230,61,.1);color:var(--lime);font-weight:700;}
+.gender-m{color:#7ac0ff;} .gender-f{color:#ffaacc;}
+@media(max-width:480px){header h1{font-size:1.6rem;}.courts-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <span class="ball-icon">🎾</span>
+  <h1>DOUBLES MATCHER</h1>
+</header>
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('match',this)">🏆 試合</button>
+    <button class="tab-btn" onclick="switchTab('members',this)">👥 メンバー</button>
+    <button class="tab-btn" onclick="switchTab('pairs',this)">⚙️ ペア設定</button>
+    <button class="tab-btn" onclick="switchTab('history',this)">📋 履歴</button>
+  </div>
+
+  <!-- MATCH TAB -->
+  <div id="tab-match" class="tab-panel active">
+    <div class="card">
+      <div class="card-title">⚙️ 設定</div>
+      <div class="settings-row">
+        <div class="setting-item"><label>コート数</label><input type="number" id="court-count" value="2" min="1" max="10" style="width:58px;" oninput="renderMatchTab()"></div>
+        <div class="setting-item"><label>同じペア回避</label><div class="toggle on" id="toggle-avoid" onclick="toggleOpt('avoid')"></div></div>
+        <div class="setting-item"><label>レベル考慮</label><div class="toggle" id="toggle-level" onclick="toggleOpt('level')"></div></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div class="card-title">⚥ 性別モード</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <label class="gender-radio"><input type="radio" name="gmode" value="none" checked onchange="renderMatchTab()">① フリー</label>
+          <label class="gender-radio"><input type="radio" name="gmode" value="mixed" onchange="renderMatchTab()">② 混合優先</label>
+          <label class="gender-radio"><input type="radio" name="gmode" value="separate" onchange="renderMatchTab()">③ 男ダブ・女ダブ優先</label>
+          <label class="gender-radio"><input type="radio" name="gmode" value="balance" onchange="renderMatchTab()">④ バランス型</label>
+        </div>
+        <div id="gmode-desc" style="font-size:0.82rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:rgba(168,230,61,.05);border-radius:8px;"></div>
+      </div>
+      <div class="inline-add">
+        <div class="inline-add-title">➕ 途中参加・一時追加</div>
+        <div class="input-row">
+          <input type="text" id="quick-name" placeholder="名前..." maxlength="10" style="flex:1;">
+          <select id="quick-gender"><option value="m">男性</option><option value="f">女性</option></select>
+          <select id="quick-level"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3" selected>Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select>
+          <button class="btn btn-primary" onclick="quickAddMember()">参加</button>
+        </div>
+      </div>
+      <div class="card-title">📅 本日の参加者</div>
+      <div id="today-members" class="member-grid" style="margin-bottom:12px;"></div>
+      <div id="attend-count" style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;"></div>
+      <button class="btn btn-generate" onclick="generateMatches()">🎲 組み合わせを生成</button>
+    </div>
+    <div id="result-area"></div>
+  </div>
+
+  <!-- MEMBERS TAB -->
+  <div id="tab-members" class="tab-panel">
+    <div class="card">
+      <div class="card-title">➕ メンバー登録</div>
+      <div class="input-row">
+        <input type="text" id="new-name" placeholder="名前を入力..." maxlength="10" style="flex:1;">
+        <select id="new-gender"><option value="m">男性</option><option value="f">女性</option></select>
+        <select id="new-level"><option value="1">Lv.1 初心者</option><option value="2">Lv.2 中初級</option><option value="3" selected>Lv.3 中級</option><option value="4">Lv.4 上級</option><option value="5">Lv.5 エース</option></select>
+        <button class="btn btn-primary" onclick="addMember()">追加</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">👥 登録メンバー <span id="member-total" style="color:var(--muted);font-size:0.78rem;"></span></div>
+      <div id="member-list" class="member-grid"></div>
+    </div>
+    <div class="card" style="border-color:rgba(168,230,61,.3);">
+      <div class="card-title">🔗 メンバーをURLで共有</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">登録メンバーをURLに埋め込みます。このURLを開けばどの端末でも同じメンバーが読み込まれます。</div>
+      <button class="btn btn-share" onclick="generateShareUrl()">🔗 共有URLを生成</button>
+      <div id="share-result" style="display:none;margin-top:12px;">
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">👇 URLをタップしてコピー（LINEやメモに貼り付けてください）</div>
+        <div class="share-url-box" id="share-url-text" onclick="copyShareUrl()"></div>
+        <div class="share-copied" id="share-copied">✅ コピーしました！</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAIR RULES TAB -->
+  <div id="tab-pairs" class="tab-panel">
+    <div class="card" style="border-color:rgba(74,138,191,.4);">
+      <div class="card-title" style="color:#aadaff;">🔵 固定ペア <span style="color:var(--muted);font-size:0.7rem;font-weight:400;text-transform:none;">— 必ず同じチームになる</span></div>
+      <div class="input-row" style="margin-bottom:12px;">
+        <select id="fixed-p1" style="flex:1;"></select>
+        <span style="color:var(--blue);font-weight:900;font-size:1rem;">&amp;</span>
+        <select id="fixed-p2" style="flex:1;"></select>
+        <button class="btn btn-blue" onclick="addFixedPair()">+ 追加</button>
+      </div>
+      <div class="pair-rule-list" id="fixed-pair-list"></div>
+    </div>
+    <div class="card" style="border-color:rgba(224,80,80,.4);">
+      <div class="card-title" style="color:#ffaaaa;">🔴 排除ペア <span style="color:var(--muted);font-size:0.7rem;font-weight:400;text-transform:none;">— 同じチームにしない</span></div>
+      <div class="input-row" style="margin-bottom:12px;">
+        <select id="excl-p1" style="flex:1;"></select>
+        <span style="color:var(--red);font-weight:900;font-size:1rem;">×</span>
+        <select id="excl-p2" style="flex:1;"></select>
+        <button class="btn btn-red" onclick="addExcludedPair()">+ 追加</button>
+      </div>
+      <div class="pair-rule-list" id="excluded-pair-list"></div>
+    </div>
+    <div class="card" style="border-color:rgba(168,230,61,.2);">
+      <div style="font-size:0.82rem;color:var(--muted);line-height:1.8;">
+        🔵 <b style="color:#aadaff;">固定ペア</b>：生成時に必ず同じチームになります。<br>
+        🔴 <b style="color:#ffaaaa;">排除ペア</b>：できるかぎり同じチームにしません。回避できない場合は警告を表示します。
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history" class="tab-panel">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="stat-rounds">0</div><div class="stat-label">ラウンド</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-matches">0</div><div class="stat-label">試合数</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-players">0</div><div class="stat-label">参加人数</div></div>
+    </div>
+    <div class="card">
+      <div class="round-header">
+        <div class="card-title" style="margin:0;">📋 ラウンド履歴</div>
+        <button class="btn btn-secondary" onclick="clearHistory()" style="font-size:0.75rem;">履歴クリア</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let members     = JSON.parse(localStorage.getItem('tm-members')  || '[]');
+let gameHistory = JSON.parse(localStorage.getItem('tm-history')  || '[]');
+let pairHist    = JSON.parse(localStorage.getItem('tm-phist')    || '{}');
+let waitHist    = JSON.parse(localStorage.getItem('tm-whist')    || '{}');
+let fixedPairs  = JSON.parse(localStorage.getItem('tm-fixed')    || '[]');
+let exclPairs   = JSON.parse(localStorage.getItem('tm-excl')     || '[]');
+let opts = {avoid:true, level:false};
+let curRound    = gameHistory.length + 1;
+let swapSel     = null;
+let curMatches  = [], curWaiting = [], curWarnings = [];
+
+// ===== URL SHARE =====
+function generateShareUrl() {
+  const data = {
+    members: members.map(m => ({id:m.id, name:m.name, level:m.level, gender:m.gender||'m', attending:false, temp:false}))
+  };
+  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  const url = location.href.split('?')[0].split('#')[0] + '?d=' + encoded;
+  document.getElementById('share-url-text').textContent = url;
+  document.getElementById('share-result').style.display = 'block';
+  document.getElementById('share-copied').style.display = 'none';
+}
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url-text').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showCopied());
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showCopied();
+  }
+}
+
+function showCopied() {
+  const el = document.getElementById('share-copied');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2500);
+}
+
+// ===== LOAD FROM URL =====
+(function loadFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const d = params.get('d');
+  if (!d) return;
+  try {
+    const data = JSON.parse(decodeURIComponent(atob(d)));
+    if (data.members && data.members.length) {
+      members = data.members;
+      saveAll();
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch(e) { console.warn('URLデータの読み込みに失敗しました', e); }
+})();
+
+// Seed default members
+if (!members.length) {
+  const names=['田中','鈴木','佐藤','山田','伊藤','渡辺','中村','小林','加藤','吉田','松本','井上','木村','林','清水'];
+  names.forEach((n,i)=>members.push({id:100+i, name:n, level:(i%5)+1, gender:i%2===0?'m':'f', attending:false, temp:false}));
+  saveAll();
+}
+
+function saveAll() {
+  localStorage.setItem('tm-members',  JSON.stringify(members));
+  localStorage.setItem('tm-history',  JSON.stringify(gameHistory));
+  localStorage.setItem('tm-phist',    JSON.stringify(pairHist));
+  localStorage.setItem('tm-whist',    JSON.stringify(waitHist));
+  localStorage.setItem('tm-fixed',    JSON.stringify(fixedPairs));
+  localStorage.setItem('tm-excl',     JSON.stringify(exclPairs));
+}
+
+// ===== TABS =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='match')   renderMatchTab();
+  if(name==='members') renderMemberList();
+  if(name==='pairs')   renderPairRules();
+  if(name==='history') renderHistory();
+}
+
+// ===== TOGGLES =====
+function toggleOpt(key) {
+  opts[key]=!opts[key];
+  document.getElementById('toggle-'+key).classList.toggle('on',opts[key]);
+}
+
+// ===== READ GENDER MODE FROM DOM =====
+function getGmode() {
+  const r = document.querySelector('input[name="gmode"]:checked');
+  return r ? r.value : 'none';
+}
+
+// ===== MEMBER MANAGEMENT =====
+function addMember() {
+  const name=document.getElementById('new-name').value.trim();
+  if(!name) return;
+  const gender=document.getElementById('new-gender').value;
+  members.push({id:Date.now(), name, gender, level:parseInt(document.getElementById('new-level').value), attending:false, temp:false});
+  saveAll(); document.getElementById('new-name').value='';
+  renderMemberList(); renderPairRules();
+}
+
+function quickAddMember() {
+  const name=document.getElementById('quick-name').value.trim();
+  if(!name) return;
+  const gender=document.getElementById('quick-gender').value;
+  members.push({id:Date.now(), name, gender, level:parseInt(document.getElementById('quick-level').value), attending:true, temp:true});
+  saveAll(); document.getElementById('quick-name').value='';
+  renderMatchTab();
+}
+
+function removeMember(id) {
+  if(!confirm('削除しますか？')) return;
+  members=members.filter(m=>m.id!==id);
+  fixedPairs=fixedPairs.filter(p=>p.a!==id&&p.b!==id);
+  exclPairs =exclPairs.filter(p=>p.a!==id&&p.b!==id);
+  saveAll(); renderMemberList(); renderPairRules();
+}
+
+function renderMemberList() {
+  const el=document.getElementById('member-list');
+  document.getElementById('member-total').textContent=`(${members.length}人)`;
+  if(!members.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">👤</div>メンバーがいません</div>';return;}
+  el.className='member-list-sortable';
+  el.innerHTML=members.map((m,i)=>{
+    const gLabel=m.gender==='f'
+      ?'<span class="gender-f" style="font-size:.85rem;">♀</span>'
+      :'<span class="gender-m" style="font-size:.85rem;">♂</span>';
+    return `<div class="member-row" draggable="true" data-idx="${i}"
+      ondragstart="dragStart(event,${i})"
+      ondragover="dragOver(event)"
+      ondragleave="dragLeave(event)"
+      ondrop="dragDrop(event,${i})"
+      ondragend="dragEnd(event)">
+      <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
+      ${gLabel}
+      <span class="mname" style="font-size:1rem;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name}</span>
+      <span class="level-badge level-${m.level}">Lv.${m.level}</span>
+      <button class="btn btn-sm" onclick="openEditMember(${m.id})" style="flex-shrink:0;background:rgba(168,230,61,.15);border-color:var(--lime);color:var(--lime);" title="編集">✏️</button>
+      <button class="btn btn-sm" onclick="removeMember(${m.id})" style="flex-shrink:0;">✕</button>
+    </div>`;
+  }).join('');
+  initTouchSort();
+}
+
+// ===== EDIT MEMBER =====
+function openEditMember(id) {
+  const m=members.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('edit-modal-name').value=m.name;
+  document.getElementById('edit-modal-level').value=m.level||3;
+  document.querySelectorAll('input[name="edit-gender"]').forEach(r=>{
+    r.checked=(r.value===(m.gender||'m'));
+  });
+  document.getElementById('edit-modal').dataset.editId=id;
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display='none';
+}
+
+function saveEditMember() {
+  const id=parseInt(document.getElementById('edit-modal').dataset.editId);
+  const m=members.find(x=>x.id===id);
+  if(!m) return;
+  const name=document.getElementById('edit-modal-name').value.trim();
+  if(!name) return;
+  const genderEl=document.querySelector('input[name="edit-gender"]:checked');
+  m.name=name;
+  m.gender=genderEl?genderEl.value:'m';
+  m.level=parseInt(document.getElementById('edit-modal-level').value);
+  saveAll();
+  closeEditModal();
+  renderMemberList();
+  renderPairRules();
+}
+
+// ===== DRAG & DROP SORT =====
+let dragSrcIdx = null;
+
+function dragStart(e, idx) {
+  dragSrcIdx = idx;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function dragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function dragDrop(e, targetIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+  const moved = members.splice(dragSrcIdx, 1)[0];
+  members.splice(targetIdx, 0, moved);
+  dragSrcIdx = null;
+  saveAll(); renderMemberList();
+}
+
+function dragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.member-row').forEach(r=>r.classList.remove('drag-over'));
+  dragSrcIdx = null;
+}
+
+// Touch sort for mobile
+let touchSelIdx = null;
+
+function initTouchSort() {
+  document.querySelectorAll('.drag-handle').forEach((handle, i) => {
+    handle.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      if(touchSelIdx === null) {
+        touchSelIdx = i;
+        handle.closest('.member-row').style.borderColor = 'var(--yellow)';
+        handle.closest('.member-row').style.background = 'rgba(245,230,66,.08)';
+      } else {
+        if(touchSelIdx !== i) {
+          const moved = members.splice(touchSelIdx, 1)[0];
+          members.splice(i, 0, moved);
+          saveAll();
+        }
+        touchSelIdx = null;
+        renderMemberList();
+      }
+    }, {passive: true});
+  });
+}
+
+// ===== MATCH TAB =====
+function renderMatchTab() {
+  const attending=members.filter(m=>m.attending);
+  document.getElementById('today-members').innerHTML=members.map(m=>{
+    const gIcon=m.gender==='f'
+      ?'<span class="gender-f">♀</span>'
+      :'<span class="gender-m">♂</span>';
+    return `<div class="member-chip ${m.attending?'attending':''}">
+      <button class="attend-toggle ${m.attending?'on':''}" onclick="toggleAttend(${m.id})">${m.attending?'✓':''}</button>
+      ${gIcon}
+      <span class="mname">${m.name}${m.temp?'<span style="font-size:.6rem;color:var(--orange);margin-left:2px;">★</span>':''}</span>
+    </div>`;
+  }).join('');
+  const courts=parseInt(document.getElementById('court-count').value)||2;
+  const play=courts*4, wait=Math.max(0,attending.length-play);
+  const males=attending.filter(m=>(m.gender||'m')==='m').length;
+  const females=attending.filter(m=>m.gender==='f').length;
+  document.getElementById('attend-count').textContent=
+    `参加: ${attending.length}人（♂${males} ♀${females}）　プレイ: ${Math.min(attending.length,play)}人　待機: ${wait}人`;
+  const descs={
+    none:'性別を考慮せずランダムに組み合わせます。',
+    mixed:'できるだけ男女1名ずつのペアを作り、混合ダブルスを優先します。',
+    separate:'できるだけ男性同士・女性同士のペアを作り、男ダブ・女ダブを優先します。',
+    balance:'コート数に応じて男ダブ・女ダブ・混合をバランスよく割り当てます。'
+  };
+  const desc=document.getElementById('gmode-desc');
+  if(desc) desc.textContent=descs[getGmode()]||'';
+}
+
+function toggleAttend(id){
+  const m=members.find(m=>m.id===id);
+  if(m){m.attending=!m.attending;saveAll();renderMatchTab();}
+}
+
+// ===== PAIR RULES =====
+function renderPairRules() {
+  const optHtml=members.map(m=>`<option value="${m.id}">${m.name} (L${m.level})</option>`).join('');
+  ['fixed-p1','fixed-p2','excl-p1','excl-p2'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=optHtml;
+  });
+  renderFixedList(); renderExcludedList();
+}
+
+function pk(a,b){return [Math.min(a,b),Math.max(a,b)].join('-');}
+
+function addFixedPair() {
+  const a=parseInt(document.getElementById('fixed-p1').value);
+  const b=parseInt(document.getElementById('fixed-p2').value);
+  if(a===b){alert('同じ人が選ばれています');return;}
+  if(fixedPairs.find(p=>pk(p.a,p.b)===pk(a,b))){alert('すでに登録されています');return;}
+  if(exclPairs.find(p=>pk(p.a,p.b)===pk(a,b))){alert('このペアは排除ペアに登録されています');return;}
+  fixedPairs.push({a,b}); saveAll(); renderFixedList();
+}
+
+function addExcludedPair() {
+  const a=parseInt(document.getElementById('excl-p1').value);
+  const b=parseInt(document.getElementById('excl-p2').value);
+  if(a===b){alert('同じ人が選ばれています');return;}
+  if(exclPairs.find(p=>pk(p.a,p.b)===pk(a,b))){alert('すでに登録されています');return;}
+  if(fixedPairs.find(p=>pk(p.a,p.b)===pk(a,b))){alert('このペアは固定ペアに登録されています');return;}
+  exclPairs.push({a,b}); saveAll(); renderExcludedList();
+}
+
+function removeFixed(i){fixedPairs.splice(i,1);saveAll();renderFixedList();}
+function removeExcl(i){exclPairs.splice(i,1);saveAll();renderExcludedList();}
+
+function renderFixedList() {
+  const el=document.getElementById('fixed-pair-list');
+  if(!fixedPairs.length){el.innerHTML='<div style="color:var(--muted);font-size:.82rem;">登録なし</div>';return;}
+  el.innerHTML=fixedPairs.map((p,i)=>{
+    const na=members.find(m=>m.id===p.a)?.name||'?';
+    const nb=members.find(m=>m.id===p.b)?.name||'?';
+    return `<div class="pair-rule-item">
+      <span class="pair-names"><b style="color:#aadaff;">${na}</b> <span style="color:var(--blue);">&</span> <b style="color:#aadaff;">${nb}</b></span>
+      <button class="btn btn-sm" onclick="removeFixed(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderExcludedList() {
+  const el=document.getElementById('excluded-pair-list');
+  if(!exclPairs.length){el.innerHTML='<div style="color:var(--muted);font-size:.82rem;">登録なし</div>';return;}
+  el.innerHTML=exclPairs.map((p,i)=>{
+    const na=members.find(m=>m.id===p.a)?.name||'?';
+    const nb=members.find(m=>m.id===p.b)?.name||'?';
+    return `<div class="pair-rule-item">
+      <span class="pair-names"><b style="color:#ffaaaa;">${na}</b> <span style="color:var(--red);">×</span> <b style="color:#ffaaaa;">${nb}</b></span>
+      <button class="btn btn-sm" onclick="removeExcl(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ===== GENERATE =====
+function generateMatches() {
+  const courts=parseInt(document.getElementById('court-count').value)||2;
+  const attending=members.filter(m=>m.attending);
+  if(attending.length<4){alert('参加者が4人以上必要です');return;}
+  const activeFixed=fixedPairs.filter(p=>
+    attending.find(m=>m.id===p.a)&&attending.find(m=>m.id===p.b));
+  const result=buildMatches(attending, courts, activeFixed);
+  if(!result){alert('有効な組み合わせを生成できませんでした。制約を見直してください。');return;}
+  result.matches.forEach(m=>{recPair(m.team1);recPair(m.team2);});
+  result.waiting.forEach(p=>{ waitHist[p.id]=(waitHist[p.id]||0)+1; });
+  gameHistory.unshift({
+    round:curRound++,
+    courts:result.matches.map(m=>({court:m.court,team1:m.team1.map(p=>p.name),team2:m.team2.map(p=>p.name)})),
+    waiting:result.waiting.map(p=>p.name),
+    time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
+  });
+  saveAll(); updateStats();
+  curMatches=[...result.matches]; curWaiting=[...result.waiting]; curWarnings=[...result.warnings];
+  swapSel=null;
+  drawResult();
+}
+
+// ===== BUILD MATCHES =====
+function buildMatches(attending, courts, activeFixed) {
+  const usedIds=new Set();
+  const lockedTeams=[];
+  for(const fp of activeFixed){
+    const pa=attending.find(m=>m.id===fp.a), pb=attending.find(m=>m.id===fp.b);
+    if(pa&&pb&&!usedIds.has(pa.id)&&!usedIds.has(pb.id)){
+      lockedTeams.push([pa,pb]); usedIds.add(pa.id); usedIds.add(pb.id);
+    }
+  }
+  const freePool = shuffle(attending.filter(m=>!usedIds.has(m.id)));
+  freePool.forEach((p,i)=>{ p._sortKey = i; });
+  freePool.sort((a,b)=>{
+    const wd=(waitHist[b.id]||0)-(waitHist[a.id]||0);
+    if(wd!==0) return wd;
+    if(opts.level){ const ld=a.level-b.level; if(ld!==0) return ld; }
+    return a._sortKey-b._sortKey;
+  });
+  const free=freePool;
+  const neededTeams = courts*2 - lockedTeams.length;
+  const gmode = getGmode();
+  let freeTeams = buildGenderPairs(free, neededTeams, gmode);
+  const allTeams=[...lockedTeams, ...freeTeams];
+  const usedInTeams=new Set(allTeams.flat().map(p=>p.id));
+  const waiting=attending.filter(p=>!usedInTeams.has(p.id));
+  const matches=[], warnings=[];
+  for(let i=0;i<courts;i++){
+    const tA=allTeams[i*2], tB=allTeams[i*2+1];
+    if(!tA||!tB) break;
+    const four=[...tA,...tB];
+    const arrs=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
+    let best=null, bestScore=Infinity;
+    for(const arr of arrs){
+      const t1=[four[arr[0][0]],four[arr[0][1]]], t2=[four[arr[1][0]],four[arr[1][1]]];
+      let ok=true;
+      for(const fp of activeFixed){
+        const both4=four.some(p=>p.id===fp.a)&&four.some(p=>p.id===fp.b);
+        if(!both4) continue;
+        const inT1=t1.some(p=>p.id===fp.a)&&t1.some(p=>p.id===fp.b);
+        const inT2=t2.some(p=>p.id===fp.a)&&t2.some(p=>p.id===fp.b);
+        if(!inT1&&!inT2){ok=false;break;}
+      }
+      if(!ok) continue;
+      const score=scoreArrangement(t1,t2,gmode);
+      if(score<bestScore){bestScore=score;best={t1,t2};}
+    }
+    if(!best) best={t1:tA,t2:tB};
+    const exclMsg=checkExcl(best.t1,best.t2);
+    if(exclMsg) warnings.push({court:i+1,msg:exclMsg,type:'excl'});
+    else if(opts.avoid){
+      const rep=(pairHist[pk(best.t1[0].id,best.t1[1].id)]||0)+(pairHist[pk(best.t2[0].id,best.t2[1].id)]||0);
+      if(rep>0) warnings.push({court:i+1,msg:'⚠ 以前同じペアを含む',type:'warn'});
+    }
+    if(gmode!=='none'){
+      const ct=courtGenderType(best.t1, best.t2);
+      if(gmode==='mixed' && ct!=='mixed')
+        warnings.push({court:i+1,msg:'⚠ 混合ペアを作れませんでした',type:'warn'});
+      if(gmode==='separate' && ct==='mixed')
+        warnings.push({court:i+1,msg:'⚠ 男女別ペアを作れませんでした',type:'warn'});
+    }
+    matches.push({court:i+1, team1:best.t1, team2:best.t2});
+  }
+  return {matches, waiting, warnings};
+}
+
+// ===== GENDER PAIR BUILDER =====
+function buildGenderPairs(free, neededTeams, gmode) {
+  const courts = neededTeams / 2;
+  if(gmode === 'none') {
+    const pool = shuffle(free.slice(0, neededTeams * 2));
+    const teams = [];
+    for(let i = 0; i+1 < pool.length; i += 2)
+      teams.push([pool[i], pool[i+1]]);
+    return teams;
+  }
+  const allM = free.filter(p => (p.gender||'m') === 'm');
+  const allF = free.filter(p => p.gender === 'f');
+  if(gmode === 'mixed') {
+    const need = neededTeams;
+    const mq = allM.slice(0, need), fq = allF.slice(0, need);
+    const teams = [];
+    while(teams.length < need) {
+      if(mq.length && fq.length)      teams.push([mq.shift(), fq.shift()]);
+      else if(mq.length >= 2)         teams.push([mq.shift(), mq.shift()]);
+      else if(fq.length >= 2)         teams.push([fq.shift(), fq.shift()]);
+      else break;
+    }
+    return teams;
+  }
+  if(gmode === 'separate') {
+    const mq = allM.slice(0, neededTeams * 2);
+    const fq = allF.slice(0, neededTeams * 2);
+    const mmPairs = [], ffPairs = [];
+    const mq2 = [...mq], fq2 = [...fq];
+    while(mq2.length >= 2) mmPairs.push([mq2.shift(), mq2.shift()]);
+    while(fq2.length >= 2) ffPairs.push([fq2.shift(), fq2.shift()]);
+    const teams = [];
+    while(mmPairs.length >= 2 && teams.length < neededTeams) {
+      teams.push(mmPairs.shift()); teams.push(mmPairs.shift());
+    }
+    while(ffPairs.length >= 2 && teams.length < neededTeams) {
+      teams.push(ffPairs.shift()); teams.push(ffPairs.shift());
+    }
+    [...mmPairs, ...ffPairs].forEach(p => { if(teams.length < neededTeams) teams.push(p); });
+    const used = new Set(teams.flat().map(p => p.id));
+    const rest = free.filter(p => !used.has(p.id));
+    for(let i = 0; i+1 < rest.length && teams.length < neededTeams; i += 2)
+      teams.push([rest[i], rest[i+1]]);
+    return teams;
+  }
+  if(gmode === 'balance') {
+    const mmGoal = Math.round(courts / 3);
+    const ffGoal = Math.round(courts / 3);
+    const mfGoal = courts - mmGoal - ffGoal;
+    let mmN = mmGoal, ffN = ffGoal, mfN = mfGoal;
+    while(mmN > 0 && allM.length < mmN * 4 + mfN * 2) { mmN--; mfN++; }
+    while(ffN > 0 && allF.length < ffN * 4 + mfN * 2) { ffN--; mfN++; }
+    while(mfN > 0 && (allM.length < mmN*4 + mfN*2 || allF.length < ffN*4 + mfN*2)) {
+      mfN--;
+      if(allM.length >= (mmN+1)*4) mmN++;
+      else ffN++;
+    }
+    const planned = mmN + ffN + mfN;
+    const extra = courts - planned;
+    const mTotal = mmN * 4 + mfN * 2;
+    const fTotal = ffN * 4 + mfN * 2;
+    const mq = shuffle(allM.slice(0, mTotal));
+    const fq = shuffle(allF.slice(0, fTotal));
+    const courtTypes = [];
+    for(let i = 0; i < mmN; i++) courtTypes.push('MM');
+    for(let i = 0; i < ffN; i++) courtTypes.push('FF');
+    for(let i = 0; i < mfN; i++) courtTypes.push('MF');
+    shuffle(courtTypes);
+    const teams = [];
+    for(const type of courtTypes) {
+      if(type === 'MM' && mq.length >= 4) {
+        teams.push([mq.shift(), mq.shift()]);
+        teams.push([mq.shift(), mq.shift()]);
+      } else if(type === 'FF' && fq.length >= 4) {
+        teams.push([fq.shift(), fq.shift()]);
+        teams.push([fq.shift(), fq.shift()]);
+      } else if(type === 'MF' && mq.length >= 2 && fq.length >= 2) {
+        teams.push([mq.shift(), fq.shift()]);
+        teams.push([mq.shift(), fq.shift()]);
+      }
+    }
+    if(extra > 0) {
+      const used = new Set(teams.flat().map(p => p.id));
+      const remM = allM.filter(p => !used.has(p.id));
+      const remF = allF.filter(p => !used.has(p.id));
+      for(let i = 0; i < extra; i++) {
+        if(remM.length >= 2 && remF.length >= 2) {
+          teams.push([remM.shift(), remF.shift()]);
+          teams.push([remM.shift(), remF.shift()]);
+        } else if(remM.length >= 4) {
+          teams.push([remM.shift(), remM.shift()]);
+          teams.push([remM.shift(), remM.shift()]);
+        } else if(remF.length >= 4) {
+          teams.push([remF.shift(), remF.shift()]);
+          teams.push([remF.shift(), remF.shift()]);
+        } else {
+          const used2 = new Set(teams.flat().map(p => p.id));
+          const anyone = free.filter(p => !used2.has(p.id));
+          for(let j = 0; j+1 < anyone.length && teams.length < neededTeams; j += 2)
+            teams.push([anyone[j], anyone[j+1]]);
+          break;
+        }
+      }
+    }
+    return teams;
+  }
+  const pool = free.slice(0, neededTeams * 2);
+  const teams = [];
+  for(let i = 0; i+1 < pool.length; i += 2)
+    teams.push([pool[i], pool[i+1]]);
+  return teams;
+}
+
+// ===== GENDER UTILS =====
+function courtGenderType(t1, t2) {
+  const g=p=>p.gender==='f'?'f':'m';
+  const isMixed =t=>t.some(p=>g(p)==='m')&&t.some(p=>g(p)==='f');
+  const isMale  =t=>t.every(p=>g(p)==='m');
+  const isFemale=t=>t.every(p=>g(p)==='f');
+  if(isMixed(t1)&&isMixed(t2))   return 'mixed';
+  if(isMale(t1)&&isMale(t2))     return 'male';
+  if(isFemale(t1)&&isFemale(t2)) return 'female';
+  return 'partial';
+}
+
+function courtGenderLabel(t1, t2) {
+  const type=courtGenderType(t1,t2);
+  if(type==='mixed')  return '🔀混合';
+  if(type==='male')   return '♂男子';
+  if(type==='female') return '♀女子';
+  return '';
+}
+
+// ===== SCORE / CHECK =====
+function scoreArrangement(t1,t2,gmode){
+  let s=0;
+  const exclKeys=exclPairs.map(p=>pk(p.a,p.b));
+  if(exclKeys.includes(pk(t1[0].id,t1[1].id))) s+=1000;
+  if(exclKeys.includes(pk(t2[0].id,t2[1].id))) s+=1000;
+  if(opts.avoid){
+    s+=(pairHist[pk(t1[0].id,t1[1].id)]||0)*10;
+    s+=(pairHist[pk(t2[0].id,t2[1].id)]||0)*10;
+  }
+  if(opts.level){
+    s+=Math.abs(t1[0].level-t1[1].level)*2;
+    s+=Math.abs(t2[0].level-t2[1].level)*2;
+  }
+  if(gmode==='mixed'){
+    const isMixed=t=>t.some(p=>(p.gender||'m')==='m')&&t.some(p=>p.gender==='f');
+    if(!isMixed(t1)) s+=500;
+    if(!isMixed(t2)) s+=500;
+  } else if(gmode==='separate'){
+    const gx=p=>(p.gender||'m');
+    const isMixedT=t=>t.some(p=>gx(p)==='m')&&t.some(p=>gx(p)==='f');
+    const isMaleT  =t=>t.every(p=>gx(p)==='m');
+    const isFemaleT=t=>t.every(p=>gx(p)==='f');
+    if(isMixedT(t1)) s+=500;
+    if(isMixedT(t2)) s+=500;
+    if((isMaleT(t1)&&isFemaleT(t2))||(isFemaleT(t1)&&isMaleT(t2))) s+=300;
+  } else if(gmode==='balance'){
+    const gx=p=>(p.gender||'m');
+    const isMaleT  =t=>t.every(p=>gx(p)==='m');
+    const isFemaleT=t=>t.every(p=>gx(p)==='f');
+    if((isMaleT(t1)&&isFemaleT(t2))||(isFemaleT(t1)&&isMaleT(t2))) s+=300;
+  }
+  return s;
+}
+
+function checkExcl(t1,t2){
+  const exclKeys=exclPairs.map(p=>pk(p.a,p.b));
+  if(exclKeys.includes(pk(t1[0].id,t1[1].id))) return `⛔ 排除ペア: ${t1[0].name} & ${t1[1].name}`;
+  if(exclKeys.includes(pk(t2[0].id,t2[1].id))) return `⛔ 排除ペア: ${t2[0].name} & ${t2[1].name}`;
+  return null;
+}
+
+function recPair(team){
+  if(team.length<2) return;
+  const k=pk(team[0].id,team[1].id);
+  pairHist[k]=(pairHist[k]||0)+1;
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ===== DRAW RESULT =====
+function drawResult() {
+  const area=document.getElementById('result-area');
+  const warnMap={};
+  curWarnings.forEach(w=>warnMap[w.court]={msg:w.msg,type:w.type});
+  const rn=curRound-1;
+  const gmode=getGmode();
+
+  let swapBarHTML='';
+  if(swapSel!==null){
+    const p=getPlayerAtSlot(swapSel);
+    swapBarHTML=`<div style="background:rgba(245,230,66,.15);border:1px solid var(--yellow);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.88rem;color:var(--yellow);">
+      🔄 <b>${p?p.name:'?'}</b> を選択中 — 入れ替え先をタップ
+      <button class="btn btn-sm" onclick="swapSel=null;drawResult();" style="margin-left:8px;">キャンセル</button>
+    </div>`;
+  }
+
+  let html=`<div class="card">
+    <div class="round-header">
+      <div class="round-badge">ROUND ${rn}</div>
+      <div style="font-size:.78rem;color:var(--muted);">${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+    ${swapBarHTML}`;
+
+  if(curWaiting.length){
+    html+=`<div class="waiting-section">
+      <div class="waiting-title">⏳ WAITING</div>
+      <div class="waiting-players">
+        ${curWaiting.map((p,wi)=>{
+          const wc=waitHist[p.id]||0;
+          const sel=swapSel===`w${wi}`;
+          const gIcon=p.gender==='f'?'<span class="gender-f">♀</span>':'<span class="gender-m">♂</span>';
+          return `<span class="waiting-tag${sel?' sel':''}" onclick="handleSlotClick('w${wi}')">${gIcon}${p.name}<span style="font-size:.65rem;opacity:.7;margin-left:3px;">待${wc}</span></span>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  html+=`<div class="courts-grid">`;
+  curMatches.forEach((m,ci)=>{
+    const w=warnMap[m.court];
+    const gLabel=gmode!=='none'?`<span style="font-size:.75rem;color:rgba(168,230,61,.9);margin-right:4px;">${courtGenderLabel(m.team1,m.team2)}</span>`:'';
+    html+=`<div class="court-card" style="animation-delay:${ci*.1}s;">
+      <div class="court-header">
+        <span class="court-name">🎾 COURT ${m.court}</span>
+        <span style="font-size:.72rem;color:rgba(168,230,61,.7);">${gLabel}タップで入れ替え</span>
+      </div>
+      <div class="court-body">
+        ${renderTeam(m.team1, ci, 0)}
+        <div class="vs-divider">VS</div>
+        ${renderTeam(m.team2, ci, 1)}
+        ${w?`<div class="${w.type==='excl'?'warn-excl':'warn-msg'}">${w.msg}</div>`:''}
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div style="display:flex;gap:7px;margin-top:10px;">
+    <button class="btn btn-secondary" onclick="regenResult()" style="flex:1;">🔄 再生成</button>
+    <button class="btn btn-orange" onclick="goHistory()" style="flex:1;">📋 履歴</button>
+  </div>
+  <div class="qr-note">💡 スマホ共有: 同じWi-FiでノートPCのIPにアクセス or VS Code Live Server</div>
+  </div>`;
+
+  area.innerHTML=html;
+}
+
+function renderTeam(team, ci, ti) {
+  return `<div class="team">
+    <div class="team-label">${ti===0?'TEAM A':'TEAM B'}</div>
+    <div class="team-players">
+      ${team.map((p,pi)=>{
+        const slotId=`c${ci}t${ti}p${pi}`;
+        const sel=swapSel===slotId;
+        const gIcon=p.gender==='f'?'<span class="gender-f">♀</span>':'<span class="gender-m">♂</span>';
+        return `<span class="player-tag${sel?' sel':''}" onclick="handleSlotClick('${slotId}')">${gIcon}${p.name}</span>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function parseSlot(slotId){
+  if(slotId.startsWith('w')){return {type:'waiting',wi:parseInt(slotId.slice(1))};}
+  const m=slotId.match(/c(\d+)t(\d+)p(\d+)/);
+  return {type:'court',ci:parseInt(m[1]),ti:parseInt(m[2]),pi:parseInt(m[3])};
+}
+
+function getPlayerAtSlot(slotId){
+  const s=parseSlot(slotId);
+  if(s.type==='waiting') return curWaiting[s.wi];
+  return s.ti===0?curMatches[s.ci].team1[s.pi]:curMatches[s.ci].team2[s.pi];
+}
+
+function setPlayerAtSlot(slotId,p){
+  const s=parseSlot(slotId);
+  if(s.type==='waiting'){curWaiting[s.wi]=p;return;}
+  if(s.ti===0) curMatches[s.ci].team1[s.pi]=p;
+  else curMatches[s.ci].team2[s.pi]=p;
+}
+
+function handleSlotClick(slotId){
+  if(swapSel===null){swapSel=slotId;drawResult();return;}
+  if(swapSel===slotId){swapSel=null;drawResult();return;}
+  const pa=getPlayerAtSlot(swapSel), pb=getPlayerAtSlot(slotId);
+  setPlayerAtSlot(swapSel,pb); setPlayerAtSlot(slotId,pa);
+  swapSel=null; drawResult();
+}
+
+function regenResult(){
+  const courts=parseInt(document.getElementById('court-count').value)||2;
+  const attending=members.filter(m=>m.attending);
+  const activeFixed=fixedPairs.filter(p=>attending.find(m=>m.id===p.a)&&attending.find(m=>m.id===p.b));
+  const result=buildMatches(attending,courts,activeFixed);
+  if(!result) return;
+  if(result.matches.length===0){alert('コートを埋めるのに十分な参加者がいません');return;}
+  curMatches=result.matches; curWaiting=result.waiting; curWarnings=result.warnings;
+  swapSel=null; saveAll(); drawResult();
+}
+
+function goHistory(){
+  switchTab('history', document.querySelectorAll('.tab-btn')[3]);
+}
+
+// ===== HISTORY =====
+function renderHistory(){
+  updateStats();
+  const el=document.getElementById('history-list');
+  if(!gameHistory.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>まだ試合がありません</div>';return;}
+  el.innerHTML=gameHistory.map(r=>`
+    <div class="history-item">
+      <div class="history-round">ROUND ${r.round} · ${r.time}</div>
+      ${r.courts.map(c=>`
+        <div style="font-size:.82rem;margin-bottom:4px;">
+          <span style="color:var(--lime);font-weight:700;">C${c.court}</span>
+          <span style="color:var(--text);"> ${c.team1.join('&')} </span>
+          <span style="color:var(--yellow);font-weight:700;">vs</span>
+          <span style="color:var(--text);"> ${c.team2.join('&')}</span>
+        </div>`).join('')}
+      ${r.waiting.length?`<div style="font-size:.75rem;color:var(--orange);">待機: ${r.waiting.join('、')}</div>`:''}
+    </div>`).join('');
+}
+
+function updateStats(){
+  document.getElementById('stat-rounds').textContent=gameHistory.length;
+  document.getElementById('stat-matches').textContent=gameHistory.reduce((s,r)=>s+r.courts.length,0);
+  const all=new Set();
+  gameHistory.forEach(r=>r.courts.forEach(c=>[...c.team1,...c.team2].forEach(n=>all.add(n))));
+  document.getElementById('stat-players').textContent=all.size;
+}
+
+function clearHistory(){
+  if(!confirm('履歴とペア記録をすべてクリアしますか？')) return;
+  gameHistory=[]; pairHist={}; waitHist={}; curRound=1; saveAll(); renderHistory();
+  document.getElementById('result-area').innerHTML='';
+}
+
+// ===== INIT =====
+let needsMigration = members.some(m=>!m.gender);
+if(needsMigration){
+  members.forEach(m=>{ if(!m.gender) m.gender='m'; });
+  saveAll();
+}
+renderMatchTab();
+</script>
+<!-- EDIT MEMBER MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#1a2a1a;border:2px solid var(--lime);border-radius:16px;padding:20px;width:100%;max-width:360px;">
+    <div style="font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--lime);margin-bottom:16px;">✏️ EDIT MEMBER</div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:4px;">名前</label>
+      <input id="edit-modal-name" type="text" maxlength="10" style="width:100%;box-sizing:border-box;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:1rem;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:4px;">性別</label>
+      <div style="display:flex;gap:8px;">
+        <label class="gender-radio" style="flex:1;justify-content:center;"><input type="radio" name="edit-gender" value="m"> ♂ 男性</label>
+        <label class="gender-radio" style="flex:1;justify-content:center;"><input type="radio" name="edit-gender" value="f"> ♀ 女性</label>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:4px;">レベル</label>
+      <select id="edit-modal-level" style="width:100%;box-sizing:border-box;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:1rem;">
+        <option value="1">Lv.1 初心者</option>
+        <option value="2">Lv.2 中初級</option>
+        <option value="3">Lv.3 中級</option>
+        <option value="4">Lv.4 上級</option>
+        <option value="5">Lv.5 エース</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" onclick="closeEditModal()" style="flex:1;">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEditMember()" style="flex:1;">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
