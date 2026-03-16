@@ -20,8 +20,8 @@ header h1{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:3px;c
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
 .container{max-width:960px;margin:0 auto;padding:16px;}
 
-.tabs{display:flex;gap:4px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:20px;border:1px solid var(--border);}
-.tab-btn{flex:1;padding:11px 4px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.tabs{display:flex;flex-direction:column;gap:4px;background:var(--card);padding:8px;border-radius:12px;margin-bottom:20px;border:1px solid var(--border);}
+.tab-btn{width:100%;padding:13px 16px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:8px;}
 .tab-btn.active{background:var(--green);color:var(--lime);box-shadow:0 2px 8px rgba(45,122,58,.5);}
 .tab-panel{display:none;} .tab-panel.active{display:block;}
 
