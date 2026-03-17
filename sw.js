@@ -1,6 +1,6 @@
-const CACHE_NAME = 'tennis-doubles-v1';
+const CACHE_NAME = 'tennis-doubles-v2';
 const ASSETS = [
-  '/pitin/tennis-doubles.html',
+  '/pitin/tennis-doubles_ver3.html',
   '/pitin/manifest.json'
 ];
 

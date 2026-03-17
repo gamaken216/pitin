@@ -2,7 +2,7 @@
   "name": "テニス ダブルス組み合わせ",
   "short_name": "ダブルス",
   "description": "フレッシュテニスクラブ ピットイン ダブルス組み合わせアプリ",
-  "start_url": "/pitin/tennis-doubles.html",
+  "start_url": "/pitin/tennis-doubles_ver3.html",
   "display": "standalone",
   "background_color": "#0f1a0f",
   "theme_color": "#2d7a3a",
