@@ -209,13 +209,51 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
       <div id="member-list" class="member-grid"></div>
     </div>
     <div class="card" style="border-color:rgba(168,230,61,.3);">
-      <div class="card-title">🔗 メンバーをURLで共有</div>
-      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">登録メンバーをURLに埋め込みます。このURLを開けばどの端末でも同じメンバーが読み込まれます。</div>
-      <button class="btn btn-share" onclick="generateShareUrl()">🔗 共有URLを生成</button>
-      <div id="share-result" style="display:none;margin-top:12px;">
-        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">👇 URLをタップしてコピー（LINEやメモに貼り付けてください）</div>
-        <div class="share-url-box" id="share-url-text" onclick="copyShareUrl()"></div>
-        <div class="share-copied" id="share-copied">✅ コピーしました！</div>
+      <div class="card-title">📤 メンバーデータの共有・移行</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">メンバーリストを別の端末や別ファイルに引き継ぐことができます。</div>
+
+      <!-- テキストコピー -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--lime);margin-bottom:6px;">📋 テキストでコピー（LINE・メモ共有）</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">メンバー一覧をテキスト形式でクリップボードにコピーします。LINEで送れます。</div>
+        <button class="btn btn-share" onclick="copyMemberText()" style="margin-bottom:6px;">📋 テキストをコピー</button>
+        <div id="text-copied" style="color:var(--lime);font-size:.82rem;font-weight:700;display:none;margin-top:4px;">✅ コピーしました！</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>
+
+      <!-- テキストインポート -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--lime);margin-bottom:6px;">📩 テキストから一括登録（LINE受信用）</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">LINEで受け取ったメンバーリストをそのまま貼り付けて「登録する」を押してください。</div>
+        <textarea id="text-import-area" placeholder="ここにテキストを貼り付け...&#10;例）1. 山田太郎（♂ Lv.3/中）" style="width:100%;box-sizing:border-box;height:120px;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:10px;resize:vertical;outline:none;" onfocus="this.style.borderColor='var(--lime)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-share" onclick="importMemberText()" style="flex:1;">✅ 登録する</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('text-import-area').value=''" style="padding:9px 14px;">クリア</button>
+        </div>
+        <div id="text-import-msg" style="font-size:.82rem;margin-top:6px;display:none;"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>
+
+      <!-- JSONエクスポート -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--lime);margin-bottom:6px;">💾 JSONファイルで保存（確実なバックアップ）</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">メンバーデータをJSONファイルとしてダウンロードします。</div>
+        <button class="btn btn-share" onclick="exportMembersJson()">💾 JSONをダウンロード</button>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>
+
+      <!-- JSONインポート -->
+      <div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--lime);margin-bottom:6px;">📂 JSONファイルから読み込み</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">保存したJSONファイルを読み込んでメンバーを復元します。<br>⚠️ 現在のメンバーリストは上書きされます。</div>
+        <label class="btn btn-share" style="cursor:pointer;">
+          📂 JSONを読み込む
+          <input type="file" accept=".json" onchange="importMembersJson(event)" style="display:none;">
+        </label>
+        <div id="import-msg" style="font-size:.82rem;margin-top:6px;display:none;"></div>
       </div>
     </div>
   </div>
@@ -281,51 +319,150 @@ let curRound    = gameHistory.length + 1;
 let swapSel     = null;
 let curMatches  = [], curWaiting = [], curWarnings = [];
 
-// ===== URL SHARE =====
-function generateShareUrl() {
-  const data = {
-    members: members.map(m => ({id:m.id, name:m.name, level:m.level, gender:m.gender||'m', attending:false, temp:false}))
-  };
-  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-  const url = location.href.split('?')[0].split('#')[0] + '?d=' + encoded;
-  document.getElementById('share-url-text').textContent = url;
-  document.getElementById('share-result').style.display = 'block';
-  document.getElementById('share-copied').style.display = 'none';
-}
+// ===== SHARE / EXPORT / IMPORT =====
 
-function copyShareUrl() {
-  const url = document.getElementById('share-url-text').textContent;
+// ① テキストコピー（LINE共有用）
+function copyMemberText() {
+  const gLabel = g => g === 'f' ? '♀' : '♂';
+  const lvLabel = l => ['','初','中初','中','上','エース'][l] || '中';
+  const text = '🎾 テニスメンバーリスト\n' +
+    members.map((m,i) => `${i+1}. ${m.name}（${gLabel(m.gender)} Lv.${m.level}/${lvLabel(m.level)}）`).join('\n');
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => showCopied());
+    navigator.clipboard.writeText(text).then(() => showTextCopied());
   } else {
     const ta = document.createElement('textarea');
-    ta.value = url; document.body.appendChild(ta);
+    ta.value = text; document.body.appendChild(ta);
     ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta); showCopied();
+    document.body.removeChild(ta); showTextCopied();
   }
 }
-
-function showCopied() {
-  const el = document.getElementById('share-copied');
+function showTextCopied() {
+  const el = document.getElementById('text-copied');
   el.style.display = 'block';
   setTimeout(() => el.style.display = 'none', 2500);
 }
 
-// ===== LOAD FROM URL =====
-(function loadFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const d = params.get('d');
-  if (!d) return;
-  try {
-    const data = JSON.parse(decodeURIComponent(atob(d)));
-    if (data.members && data.members.length) {
-      members = data.members;
-      saveAll();
-      // URLパラメータを消してリロード防止
-      history.replaceState(null, '', location.pathname);
+// ①-b テキストから一括インポート（LINE受信用）
+function importMemberText() {
+  const raw = document.getElementById('text-import-area').value.trim();
+  const msgEl = document.getElementById('text-import-msg');
+  if (!raw) {
+    msgEl.style.display = 'block'; msgEl.style.color = 'var(--orange)';
+    msgEl.textContent = '⚠️ テキストを貼り付けてください';
+    return;
+  }
+
+  // パース: "N. 名前（♂/♀ Lv.X/...）" の各行を解析
+  const lvMap = {'初':1,'中初':2,'中':3,'上':4,'エース':5};
+  const parsed = [];
+  const errors = [];
+
+  raw.split('\n').forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('🎾')) return; // タイトル行スキップ
+
+    // 名前と属性を抽出: "N. 名前（♂ Lv.3/中）" or "名前（♀ Lv.2/中初）"
+    const m = line.match(/(?:\d+\.\s*)?(.+?)（([♂♀])\s*Lv\.([1-5])\/([^）]+)）/);
+    if (!m) {
+      // 最低限 名前だけでも拾う（性別・レベルはデフォルト）
+      const simpleName = line.replace(/^\d+\.\s*/, '').trim();
+      if (simpleName && simpleName.length <= 12) {
+        parsed.push({ name: simpleName, gender: 'm', level: 3 });
+      } else {
+        if (line.length > 0) errors.push(line);
+      }
+      return;
     }
-  } catch(e) { console.warn('URLデータの読み込みに失敗しました', e); }
-})();
+    const name   = m[1].trim();
+    const gender = m[2] === '♀' ? 'f' : 'm';
+    const level  = parseInt(m[3]) || 3;
+    if (name) parsed.push({ name, gender, level });
+  });
+
+  if (!parsed.length) {
+    msgEl.style.display = 'block'; msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '❌ 読み取れる行がありませんでした。書式を確認してください。';
+    return;
+  }
+
+  const action = members.length > 0
+    ? confirm(`${parsed.length}人を読み込みます。\n\n【追加】現在のメンバーに追加する → OK\n【上書き】全員入れ替える → キャンセル後に別途操作`)
+    : false; // メンバーがいなければ問答無用で追加
+
+  if (action) {
+    // 追加モード：名前が重複していない人だけ追加
+    const existingNames = new Set(members.map(m => m.name));
+    const newOnes = parsed.filter(p => !existingNames.has(p.name));
+    newOnes.forEach(p => members.push({ id: Date.now() + Math.random(), ...p, attending: false, temp: false }));
+    const msg = newOnes.length < parsed.length
+      ? `✅ ${newOnes.length}人を追加しました（${parsed.length - newOnes.length}人は重複のためスキップ）`
+      : `✅ ${newOnes.length}人を追加しました！`;
+    msgEl.style.display = 'block'; msgEl.style.color = 'var(--lime)'; msgEl.textContent = msg;
+  } else {
+    // 上書きモード
+    if (members.length > 0 && !confirm(`現在の${members.length}人を削除して、${parsed.length}人に入れ替えますか？`)) return;
+    members = parsed.map(p => ({ id: Date.now() + Math.random(), ...p, attending: false, temp: false }));
+    msgEl.style.display = 'block'; msgEl.style.color = 'var(--lime)';
+    msgEl.textContent = `✅ ${members.length}人を登録しました！`;
+  }
+
+  saveAll(); renderMemberList(); renderAttendance(); renderPairRules();
+  document.getElementById('text-import-area').value = '';
+  setTimeout(() => msgEl.style.display = 'none', 4000);
+  if (errors.length) console.warn('スキップした行:', errors);
+}
+
+// ② JSONエクスポート（ダウンロード）
+function exportMembersJson() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    members: members.map(m => ({
+      id: m.id, name: m.name, gender: m.gender || 'm',
+      level: m.level, attending: false, temp: false
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toLocaleDateString('ja-JP',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
+  a.href = url; a.download = `tennis-members-${date}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ③ JSONインポート（ファイル読み込み）
+function importMembersJson(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msgEl = document.getElementById('import-msg');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.members || !Array.isArray(data.members) || data.members.length === 0)
+        throw new Error('メンバーデータが見つかりません');
+      if (!confirm(`${data.members.length}人のメンバーを読み込みます。\n現在のメンバーリストは上書きされます。よろしいですか？`)) return;
+      members = data.members.map(m => ({
+        id: m.id || Date.now() + Math.random(),
+        name: m.name, gender: m.gender || 'm',
+        level: m.level || 3, attending: false, temp: false
+      }));
+      saveAll();
+      renderMemberList(); renderAttendance(); renderPairRules();
+      msgEl.style.display = 'block';
+      msgEl.style.color = 'var(--lime)';
+      msgEl.textContent = `✅ ${members.length}人を読み込みました！`;
+      setTimeout(() => msgEl.style.display = 'none', 3000);
+    } catch(err) {
+      msgEl.style.display = 'block';
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = `❌ 読み込みエラー: ${err.message}`;
+    }
+    event.target.value = ''; // リセットして同じファイルを再読み込み可能に
+  };
+  reader.readAsText(file);
+}
 
 // Seed default members
 if (!members.length) {
