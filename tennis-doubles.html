@@ -318,6 +318,8 @@ let opts = {avoid:true, level:false};
 let curRound    = gameHistory.length + 1;
 let swapSel     = null;
 let curMatches  = [], curWaiting = [], curWarnings = [];
+let prevWaitIds = new Set();   // 前回待機した人のIDセット
+let prevPairKeys = new Set();  // 前回のペアキーセット（連続同一ペア回避用）
 
 // ===== SHARE / EXPORT / IMPORT =====
 
@@ -834,6 +836,14 @@ function generateMatches() {
   });
   saveAll(); updateStats();
 
+  // 前回待機・前回ペア情報を更新（次ラウンドの連続回避用）
+  prevWaitIds = new Set(result.waiting.map(p=>p.id));
+  prevPairKeys = new Set();
+  result.matches.forEach(m=>{
+    prevPairKeys.add(pk(m.team1[0].id, m.team1[1].id));
+    prevPairKeys.add(pk(m.team2[0].id, m.team2[1].id));
+  });
+
   curMatches=[...result.matches]; curWaiting=[...result.waiting]; curWarnings=[...result.warnings];
   swapSel=null;
   drawResult();
@@ -852,9 +862,13 @@ function buildMatches(attending, courts, activeFixed) {
     }
   }
 
-  // プレイ回数が少ない人を優先、同点はシャッフルでランダム
+  // プレイ回数が少ない人を優先 + 前回待機者は優先ブースト（連続休み回避）
   const freePool = shuffle(attending.filter(m => !usedIds.has(m.id)));
-  freePool.sort((a,b) => (playHist[a.id]||0) - (playHist[b.id]||0));
+  freePool.sort((a,b) => {
+    const pa = (playHist[a.id]||0) - (prevWaitIds.has(a.id) ? 0.5 : 0);
+    const pb = (playHist[b.id]||0) - (prevWaitIds.has(b.id) ? 0.5 : 0);
+    return pa - pb;
+  });
 
   // コートに必要なチーム数
   const neededTeams = courts * 2 - lockedTeams.length;
@@ -925,7 +939,8 @@ function makePairsOptimal(pool, gmode) {
   function pairScore(a, b) {
     const hist = pairHist[pk(a.id, b.id)] || 0;
     const genderBonus = (gmode === 'mixed' && a.gender !== b.gender) ? -2 : 0;
-    return hist + genderBonus;
+    const consecPenalty = prevPairKeys.has(pk(a.id, b.id)) ? 5 : 0;
+    return hist + genderBonus + consecPenalty;
   }
 
   // 4人: 全3通りを試して最良を選ぶ
@@ -1094,6 +1109,9 @@ function scoreArrangement(t1,t2,gmode){
     s+=(pairHist[pk(t1[0].id,t1[1].id)]||0)*10;
     s+=(pairHist[pk(t2[0].id,t2[1].id)]||0)*10;
   }
+  // 前回と同じペアにペナルティ（連続同一ペア回避）
+  if(prevPairKeys.has(pk(t1[0].id,t1[1].id))) s+=50;
+  if(prevPairKeys.has(pk(t2[0].id,t2[1].id))) s+=50;
   if(opts.level){
     s+=Math.abs(t1[0].level-t1[1].level)*2;
     s+=Math.abs(t2[0].level-t2[1].level)*2;
@@ -1303,6 +1321,14 @@ function regenResult(){
     waitingIds: result.waiting.map(p=>p.id),
     waiting: result.waiting.map(p=>p.name),
     time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
+  });
+
+  // 前回待機・前回ペア情報を更新（次ラウンドの連続回避用）
+  prevWaitIds = new Set(result.waiting.map(p=>p.id));
+  prevPairKeys = new Set();
+  result.matches.forEach(m=>{
+    prevPairKeys.add(pk(m.team1[0].id, m.team1[1].id));
+    prevPairKeys.add(pk(m.team2[0].id, m.team2[1].id));
   });
 
   curMatches=result.matches; curWaiting=result.waiting; curWarnings=result.warnings;
