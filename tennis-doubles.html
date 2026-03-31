@@ -1275,7 +1275,57 @@ function handleSlotClick(slotId){
   if(swapSel===slotId){swapSel=null;drawResult();return;}
   const pa=getPlayerAtSlot(swapSel), pb=getPlayerAtSlot(slotId);
   setPlayerAtSlot(swapSel,pb); setPlayerAtSlot(slotId,pa);
-  swapSel=null; drawResult();
+  swapSel=null;
+
+  // 入れ替え後に履歴・統計・前回情報を再計算
+  syncAfterSwap();
+  drawResult();
+}
+
+function syncAfterSwap(){
+  if(gameHistory.length===0) return;
+  const last=gameHistory[0];
+
+  // 現在のcurMatchesからID一覧を再取得
+  const playingIds=curMatches.flatMap(m=>[...m.team1,...m.team2].map(p=>p.id));
+  const waitingIds=curWaiting.map(p=>p.id);
+
+  // playHistを補正: 旧→新の差分
+  const oldPlaySet=new Set(last.playingIds||[]);
+  const newPlaySet=new Set(playingIds);
+  oldPlaySet.forEach(id=>{ if(!newPlaySet.has(id) && playHist[id]>0) playHist[id]--; });
+  newPlaySet.forEach(id=>{ if(!oldPlaySet.has(id)) playHist[id]=(playHist[id]||0)+1; });
+
+  // pairHistを補正: 旧ペアを減らし、新ペアを増やす
+  (last.courts||[]).forEach(c=>{
+    if(c.team1ids&&c.team1ids.length===2){ const k=pk(c.team1ids[0],c.team1ids[1]); if(pairHist[k]>0) pairHist[k]--; }
+    if(c.team2ids&&c.team2ids.length===2){ const k=pk(c.team2ids[0],c.team2ids[1]); if(pairHist[k]>0) pairHist[k]--; }
+  });
+  curMatches.forEach(m=>{
+    recPair(m.team1); recPair(m.team2);
+  });
+
+  // gameHistoryの最新エントリを更新
+  last.courts=curMatches.map(m=>({
+    court:m.court,
+    team1:m.team1.map(p=>p.name),
+    team2:m.team2.map(p=>p.name),
+    team1ids:m.team1.map(p=>p.id),
+    team2ids:m.team2.map(p=>p.id)
+  }));
+  last.playingIds=playingIds;
+  last.waitingIds=waitingIds;
+  last.waiting=curWaiting.map(p=>p.name);
+
+  // prevWaitIds / prevPairKeys を再計算
+  prevWaitIds=new Set(waitingIds);
+  prevPairKeys=new Set();
+  curMatches.forEach(m=>{
+    prevPairKeys.add(pk(m.team1[0].id, m.team1[1].id));
+    prevPairKeys.add(pk(m.team2[0].id, m.team2[1].id));
+  });
+
+  saveAll();
 }
 
 function regenResult(){
