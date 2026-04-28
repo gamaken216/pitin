@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎾 DOUBLES MATCHER Ver.3 [DEMO]</title>
+<title>🎾 DOUBLES MATCHER Ver.4 [DEMO]</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap');
 :root {
@@ -139,7 +139,7 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 <body>
 <header>
   <span class="ball-icon">🎾</span>
-  <h1>DOUBLES MATCHER Ver.3</h1>
+  <h1>DOUBLES MATCHER Ver.4</h1>
 </header>
 <div class="container">
   <div class="tabs">
@@ -312,6 +312,7 @@ let gameHistory = JSON.parse(localStorage.getItem('tmd-history')  || '[]');
 let pairHist    = JSON.parse(localStorage.getItem('tmd-phist')    || '{}');
 let playHist    = JSON.parse(localStorage.getItem('tmd-playhist') || '{}');
 let typeHist    = JSON.parse(localStorage.getItem('tmd-typehist') || '{}');
+let courtHist   = JSON.parse(localStorage.getItem('tmd-courthist')|| '{}');
 let fixedPairs  = JSON.parse(localStorage.getItem('tmd-fixed')    || '[]');
 let exclPairs   = JSON.parse(localStorage.getItem('tmd-excl')     || '[]');
 let opts = {avoid:true, level:false};
@@ -492,6 +493,7 @@ function saveAll() {
   localStorage.setItem('tmd-phist',     JSON.stringify(pairHist));
   localStorage.setItem('tmd-playhist',  JSON.stringify(playHist));
   localStorage.setItem('tmd-typehist',  JSON.stringify(typeHist));
+  localStorage.setItem('tmd-courthist', JSON.stringify(courtHist));
   localStorage.setItem('tmd-fixed',     JSON.stringify(fixedPairs));
   localStorage.setItem('tmd-excl',      JSON.stringify(exclPairs));
 }
@@ -816,7 +818,7 @@ function generateMatches() {
   if(!result){alert('有効な組み合わせを生成できませんでした。制約を見直してください。');return;}
 
   result.matches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
     [...m.team1,...m.team2].forEach(p=>{ playHist[p.id]=(playHist[p.id]||0)+1; });
   });
 
@@ -849,233 +851,307 @@ function generateMatches() {
   drawResult();
 }
 
+// ===== COURT HISTORY HELPERS =====
+function recCourt(match) {
+  const four = [...match.team1, ...match.team2];
+  for (let i = 0; i < four.length; i++)
+    for (let j = i + 1; j < four.length; j++) {
+      const k = pk(four[i].id, four[j].id);
+      courtHist[k] = (courtHist[k] || 0) + 1;
+    }
+}
+function unrecCourt(ids) {
+  for (let i = 0; i < ids.length; i++)
+    for (let j = i + 1; j < ids.length; j++) {
+      const k = pk(ids[i], ids[j]);
+      if (courtHist[k] > 0) courtHist[k]--;
+    }
+}
+
+// ===== ENUMERATION HELPERS =====
+function allPairings(arr) {
+  if (arr.length === 0) return [[]];
+  if (arr.length === 2) return [[[arr[0], arr[1]]]];
+  const first = arr[0], rest = arr.slice(1), results = [];
+  for (let i = 0; i < rest.length; i++) {
+    const remaining = [...rest.slice(0, i), ...rest.slice(i + 1)];
+    for (const sub of allPairings(remaining))
+      results.push([[first, rest[i]], ...sub]);
+  }
+  return results;
+}
+
+function allCourtGroupings(teams, numCourts) {
+  if (numCourts <= 0 || teams.length < 2) return [[]];
+  const results = [];
+  for (let i = 0; i < teams.length; i++)
+    for (let j = i + 1; j < teams.length; j++) {
+      const rem = teams.filter((_, k) => k !== i && k !== j);
+      if (numCourts === 1) results.push([[teams[i], teams[j]]]);
+      else for (const sub of allCourtGroupings(rem, numCourts - 1))
+        results.push([[teams[i], teams[j]], ...sub]);
+    }
+  return results;
+}
+
+// ===== SCORING =====
+function scoreFullAssignment(courtPairs, gmode, activeFixed) {
+  let score = 0;
+  const exclKeys = new Set(exclPairs.map(p => pk(p.a, p.b)));
+
+  for (const [t1, t2] of courtPairs) {
+    const k1 = pk(t1[0].id, t1[1].id), k2 = pk(t2[0].id, t2[1].id);
+    const four = [...t1, ...t2];
+
+    // Fixed pair: must be same team
+    for (const fp of activeFixed) {
+      const hasBoth = four.some(p => p.id === fp.a) && four.some(p => p.id === fp.b);
+      if (!hasBoth) continue;
+      const in1 = t1.some(p => p.id === fp.a) && t1.some(p => p.id === fp.b);
+      const in2 = t2.some(p => p.id === fp.a) && t2.some(p => p.id === fp.b);
+      if (!in1 && !in2) score += 100000;
+    }
+
+    // Excluded pair penalty
+    if (exclKeys.has(k1)) score += 10000;
+    if (exclKeys.has(k2)) score += 10000;
+
+    // Pair history (teammate repetition)
+    if (opts.avoid) {
+      score += (pairHist[k1] || 0) * 20;
+      score += (pairHist[k2] || 0) * 20;
+    }
+
+    // Consecutive same pair
+    if (prevPairKeys.has(k1)) score += 100;
+    if (prevPairKeys.has(k2)) score += 100;
+
+    // Court history (same court repetition)
+    for (let i = 0; i < four.length; i++)
+      for (let j = i + 1; j < four.length; j++)
+        score += (courtHist[pk(four[i].id, four[j].id)] || 0) * 3;
+
+    // Gender mode
+    const g = p => (p.gender || 'm');
+    if (gmode === 'mixed') {
+      if (g(t1[0]) === g(t1[1])) score += 500;
+      if (g(t2[0]) === g(t2[1])) score += 500;
+    } else if (gmode === 'separate') {
+      if (g(t1[0]) !== g(t1[1])) score += 500;
+      if (g(t2[0]) !== g(t2[1])) score += 500;
+      if ((t1.every(p=>g(p)==='m') && t2.every(p=>g(p)==='f')) ||
+          (t1.every(p=>g(p)==='f') && t2.every(p=>g(p)==='m'))) score += 300;
+    } else if (gmode === 'balance') {
+      if ((t1.every(p=>g(p)==='m') && t2.every(p=>g(p)==='f')) ||
+          (t1.every(p=>g(p)==='f') && t2.every(p=>g(p)==='m'))) score += 300;
+    }
+
+    // Level balance
+    if (opts.level) {
+      score += Math.abs(t1[0].level - t1[1].level) * 2;
+      score += Math.abs(t2[0].level - t2[1].level) * 2;
+    }
+  }
+  return score;
+}
+
+// ===== PLAYER SELECTION =====
+function selectPlayers(freePool, count) {
+  if (count >= freePool.length) return [...freePool];
+  const withScore = freePool.map(p => ({
+    player: p,
+    score: (playHist[p.id] || 0) - (prevWaitIds.has(p.id) ? 1 : 0)
+  }));
+  withScore.sort((a, b) => a.score - b.score);
+  const cutoff = withScore[count - 1].score;
+  const must = withScore.filter(w => w.score < cutoff).map(w => w.player);
+  const atCutoff = shuffle(withScore.filter(w => w.score === cutoff).map(w => w.player));
+  return [...must, ...atCutoff.slice(0, count - must.length)];
+}
+
 // ===== BUILD MATCHES =====
 function buildMatches(attending, courts, activeFixed) {
   const usedIds = new Set();
   const lockedTeams = [];
 
-  // 固定ペアをまず確定
-  for(const fp of activeFixed){
-    const pa=attending.find(m=>m.id===fp.a), pb=attending.find(m=>m.id===fp.b);
-    if(pa&&pb&&!usedIds.has(pa.id)&&!usedIds.has(pb.id)){
-      lockedTeams.push([pa,pb]); usedIds.add(pa.id); usedIds.add(pb.id);
+  for (const fp of activeFixed) {
+    const pa = attending.find(m => m.id === fp.a), pb = attending.find(m => m.id === fp.b);
+    if (pa && pb && !usedIds.has(pa.id) && !usedIds.has(pb.id)) {
+      lockedTeams.push([pa, pb]); usedIds.add(pa.id); usedIds.add(pb.id);
     }
   }
 
-  // プレイ回数が少ない人を優先 + 前回待機者は優先ブースト（連続休み回避）
   const freePool = shuffle(attending.filter(m => !usedIds.has(m.id)));
-  freePool.sort((a,b) => {
-    const pa = (playHist[a.id]||0) - (prevWaitIds.has(a.id) ? 0.5 : 0);
-    const pb = (playHist[b.id]||0) - (prevWaitIds.has(b.id) ? 0.5 : 0);
+  freePool.sort((a, b) => {
+    const pa = (playHist[a.id] || 0) - (prevWaitIds.has(a.id) ? 1 : 0);
+    const pb = (playHist[b.id] || 0) - (prevWaitIds.has(b.id) ? 1 : 0);
     return pa - pb;
   });
 
-  // コートに必要なチーム数
-  const neededTeams = courts * 2 - lockedTeams.length;
-  // 必要なプレイヤー数（固定ペア分を除く）
-  const neededPlayers = neededTeams * 2;
-  // 実際にプレイできる人数（参加者が足りない場合は調整）
-  const actualPlay = Math.min(neededPlayers, freePool.length - (freePool.length % 2 < neededPlayers % 2 ? 0 : 0));
-  // コートに出る人 = 先頭から neededPlayers 人（ただし偶数人）
-  const playCount = Math.min(neededPlayers, Math.floor(freePool.length / 1) % 2 === 0 ? freePool.length : freePool.length);
+  const activeCourts = Math.min(courts, Math.floor((freePool.length + lockedTeams.length * 2) / 4));
+  if (activeCourts === 0) return null;
+  const neededFreeTeams = activeCourts * 2 - lockedTeams.length;
+  const neededFreePlayers = neededFreeTeams * 2;
+  const selected = selectPlayers(freePool, neededFreePlayers);
+  const waiting = freePool.filter(p => !selected.some(s => s.id === p.id));
 
   const gmode = getGmode();
-  const freeTeams = buildGenderPairs(freePool, neededTeams, gmode);
 
-  const allTeams = [...lockedTeams, ...freeTeams];
-  // プレイする人のIDセット
-  const usedInTeams = new Set(allTeams.flat().map(p => p.id));
-  // 待機 = 参加者のうちチームに入っていない人（waitHist順）
-  const waiting = freePool.filter(p => !usedInTeams.has(p.id));
+  if (gmode === 'balance') {
+    return buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed);
+  }
 
-  const matches=[], warnings=[];
-  for(let i=0;i<courts;i++){
-    const tA=allTeams[i*2], tB=allTeams[i*2+1];
-    if(!tA||!tB) break;
-    const four=[...tA,...tB];
-    const arrs=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
-    let best=null, bestScore=Infinity;
-    for(const arr of arrs){
-      const t1=[four[arr[0][0]],four[arr[0][1]]], t2=[four[arr[1][0]],four[arr[1][1]]];
-      let ok=true;
-      for(const fp of activeFixed){
-        const both4=four.some(p=>p.id===fp.a)&&four.some(p=>p.id===fp.b);
-        if(!both4) continue;
-        const inT1=t1.some(p=>p.id===fp.a)&&t1.some(p=>p.id===fp.b);
-        const inT2=t2.some(p=>p.id===fp.a)&&t2.some(p=>p.id===fp.b);
-        if(!inT1&&!inT2){ok=false;break;}
+  let bestCourts = null, bestScore = Infinity;
+
+  if (selected.length <= 12) {
+    const pairings = allPairings(selected);
+    for (const pairing of pairings) {
+      const allTeams = [...lockedTeams, ...pairing];
+      const groupings = allCourtGroupings(allTeams, activeCourts);
+      for (const grp of groupings) {
+        const sc = scoreFullAssignment(grp, gmode, activeFixed);
+        if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
       }
-      if(!ok) continue;
-      const score=scoreArrangement(t1,t2,gmode);
-      if(score<bestScore){bestScore=score;best={t1,t2};}
     }
-    if(!best) best={t1:tA,t2:tB};
-
-    const exclMsg=checkExcl(best.t1,best.t2);
-    if(exclMsg) warnings.push({court:i+1,msg:exclMsg,type:'excl'});
-    else if(opts.avoid){
-      const rep=(pairHist[pk(best.t1[0].id,best.t1[1].id)]||0)+(pairHist[pk(best.t2[0].id,best.t2[1].id)]||0);
-      if(rep>0) warnings.push({court:i+1,msg:'⚠ 以前同じペアを含む',type:'warn'});
+  } else {
+    for (let trial = 0; trial < 2000; trial++) {
+      const shuffled = shuffle([...selected]);
+      const pairing = [];
+      for (let i = 0; i + 1 < shuffled.length; i += 2) pairing.push([shuffled[i], shuffled[i + 1]]);
+      const allTeams = shuffle([...lockedTeams, ...pairing]);
+      const grp = [];
+      for (let i = 0; i + 1 < allTeams.length; i += 2) grp.push([allTeams[i], allTeams[i + 1]]);
+      if (grp.length !== activeCourts) continue;
+      const sc = scoreFullAssignment(grp, gmode, activeFixed);
+      if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
     }
+  }
 
-    if(gmode!=='none'){
-      const ct=courtGenderType(best.t1, best.t2);
-      if(gmode==='mixed' && ct!=='mixed')
-        warnings.push({court:i+1,msg:'⚠ 混合ペアを作れませんでした',type:'warn'});
-      if(gmode==='separate' && ct==='mixed')
-        warnings.push({court:i+1,msg:'⚠ 男女別ペアを作れませんでした',type:'warn'});
+  if (!bestCourts) return null;
+
+  const matches = [], warnings = [];
+  for (let i = 0; i < bestCourts.length; i++) {
+    const [t1, t2] = bestCourts[i];
+    const exclMsg = checkExcl(t1, t2);
+    if (exclMsg) warnings.push({court: i+1, msg: exclMsg, type: 'excl'});
+    else if (opts.avoid) {
+      const rep = (pairHist[pk(t1[0].id,t1[1].id)]||0) + (pairHist[pk(t2[0].id,t2[1].id)]||0);
+      if (rep > 0) warnings.push({court: i+1, msg: '⚠ 以前同じペアを含む', type: 'warn'});
     }
-
-    matches.push({court:i+1, team1:best.t1, team2:best.t2});
+    if (gmode !== 'none') {
+      const ct = courtGenderType(t1, t2);
+      if (gmode === 'mixed' && ct !== 'mixed')
+        warnings.push({court: i+1, msg: '⚠ 混合ペアを作れませんでした', type: 'warn'});
+      if (gmode === 'separate' && ct === 'mixed')
+        warnings.push({court: i+1, msg: '⚠ 男女別ペアを作れませんでした', type: 'warn'});
+    }
+    matches.push({court: i+1, team1: t1, team2: t2});
   }
   return {matches, waiting, warnings};
 }
 
-// ===== PAIR OPTIMIZER =====
-// pairHistを考慮して最もペアが均等になるよう組み合わせを作る
-function makePairsOptimal(pool, gmode) {
-  if(pool.length < 2) return [];
+// ===== BALANCE MODE =====
+function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed) {
+  const allM = selected.filter(p => (p.gender || 'm') === 'm');
+  const allF = selected.filter(p => p.gender === 'f');
+  const gmode = 'balance';
 
-  function pairScore(a, b) {
-    const hist = pairHist[pk(a.id, b.id)] || 0;
-    const genderBonus = (gmode === 'mixed' && a.gender !== b.gender) ? -2 : 0;
-    const consecPenalty = prevPairKeys.has(pk(a.id, b.id)) ? 5 : 0;
-    return hist + genderBonus + consecPenalty;
-  }
+  const PATTERNS = {
+    1: [['MF'],['MM'],['FF']],
+    2: [['MM','FF'],['MM','MF'],['FF','MF'],['MM','MM'],['FF','FF'],['MF','MF']],
+    3: [['MM','FF','MF'],['MM','MM','FF'],['MM','FF','FF'],['MM','MM','MF'],['FF','FF','MF']],
+    4: [['MM','FF','MF','MF'],['MM','MM','FF','MF'],['MM','FF','FF','MF'],
+        ['MM','MM','FF','FF'],['MM','MM','MM','MF'],['FF','FF','FF','MF']],
+  };
 
-  // 4人: 全3通りを試して最良を選ぶ
-  if(pool.length === 4) {
-    const [a,b,c,d] = pool;
-    const opts = [
-      {pairs:[[a,b],[c,d]], score:pairScore(a,b)+pairScore(c,d)},
-      {pairs:[[a,c],[b,d]], score:pairScore(a,c)+pairScore(b,d)},
-      {pairs:[[a,d],[b,c]], score:pairScore(a,d)+pairScore(b,c)},
-    ];
-    opts.sort((x,y)=>x.score-y.score);
-    const minScore = opts[0].score;
-    const best = opts.filter(o=>o.score===minScore);
-    return best[Math.floor(Math.random()*best.length)].pairs;
-  }
+  const feasible = (PATTERNS[activeCourts] || []).filter(plan => {
+    const mNeed = plan.filter(t => t === 'MM').length * 4 + plan.filter(t => t === 'MF').length * 2;
+    const fNeed = plan.filter(t => t === 'FF').length * 4 + plan.filter(t => t === 'MF').length * 2;
+    return allM.length >= mNeed && allF.length >= fNeed;
+  });
 
-  // 8人以上: グリーディー（先頭から最良の相手を選ぶ）
-  const remaining = shuffle([...pool]);
-  const used = new Set();
-  const teams = [];
-  for(let i=0; i<remaining.length; i++) {
-    const a = remaining[i];
-    if(used.has(a.id)) continue;
-    used.add(a.id);
-    let candidates = remaining.filter(p => !used.has(p.id));
-    if(!candidates.length) break;
-    // 混合優先: 異性候補がいれば異性から選ぶ
-    if(gmode === 'mixed') {
-      const opp = candidates.filter(p => p.gender !== a.gender);
-      if(opp.length) candidates = opp;
+  if (!feasible.length) {
+    // Fallback: use generic algorithm
+    let bestCourts = null, bestScore = Infinity;
+    if (selected.length <= 12) {
+      for (const pairing of allPairings(selected)) {
+        const allTeams = [...lockedTeams, ...pairing];
+        for (const grp of allCourtGroupings(allTeams, activeCourts)) {
+          const sc = scoreFullAssignment(grp, gmode, activeFixed);
+          if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
+        }
+      }
+    } else {
+      for (let trial = 0; trial < 2000; trial++) {
+        const shuffled = shuffle([...selected]);
+        const pairing = [];
+        for (let i = 0; i + 1 < shuffled.length; i += 2) pairing.push([shuffled[i], shuffled[i + 1]]);
+        const allTeams = shuffle([...lockedTeams, ...pairing]);
+        const grp = [];
+        for (let i = 0; i + 1 < allTeams.length; i += 2) grp.push([allTeams[i], allTeams[i + 1]]);
+        if (grp.length !== activeCourts) continue;
+        const sc = scoreFullAssignment(grp, gmode, activeFixed);
+        if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
+      }
     }
-    const minScore = Math.min(...candidates.map(p=>pairScore(a,p)));
-    const best = candidates.filter(p=>pairScore(a,p)===minScore);
-    const b = best[Math.floor(Math.random()*best.length)];
-    used.add(b.id);
-    teams.push([a,b]);
-  }
-  return teams;
-}
-
-// ===== GENDER PAIR BUILDER =====
-// 共通: 出場均等最優先 + コートを必ず埋める
-// ① 実際に使えるコート数 = min(courts, floor(参加人数/4))
-// ② そのコート数×4人をwaitHist順で選ぶ
-// ③ makePairsOptimalでpairHist考慮のペアを組む
-function selectPlayersForCourts(free, courts) {
-  const activeCourts = Math.min(courts, Math.floor(free.length / 4));
-  return free.slice(0, activeCourts * 4);
-}
-
-function buildGenderPairs(free, neededTeams, gmode) {
-  const courts = neededTeams / 2;
-
-  if(gmode === 'none') {
-    const selected = selectPlayersForCourts(free, courts);
-    return makePairsOptimal(selected, 'none');
-  }
-
-  if(gmode === 'mixed') {
-    // 出場均等優先で選んだ人の中で混合ペアを最大化しつつpairHistも考慮
-    const selected = selectPlayersForCourts(free, courts);
-    return makePairsOptimal(selected, 'mixed');
-  }
-
-  if(gmode === 'separate') {
-    const selected = selectPlayersForCourts(free, courts);
-    const males   = shuffle(selected.filter(p => (p.gender||'m') === 'm'));
-    const females = shuffle(selected.filter(p => p.gender === 'f'));
-    const mmTeams = makePairsOptimal(males,   'none');
-    const ffTeams = makePairsOptimal(females, 'none');
-    const teams = [];
-    const mmQ=[...mmTeams], ffQ=[...ffTeams];
-    while(mmQ.length>=2 && teams.length<neededTeams){ teams.push(mmQ.shift()); teams.push(mmQ.shift()); }
-    while(ffQ.length>=2 && teams.length<neededTeams){ teams.push(ffQ.shift()); teams.push(ffQ.shift()); }
-    [...mmQ,...ffQ].forEach(p=>{ if(teams.length<neededTeams) teams.push(p); });
-    const usedIds=new Set(teams.flat().map(p=>p.id));
-    const rem=selected.filter(p=>!usedIds.has(p.id));
-    for(let i=0;i+1<rem.length&&teams.length<neededTeams;i+=2) teams.push([rem[i],rem[i+1]]);
-    return teams;
-  }
-
-  if(gmode === 'balance') {
-    const selected = selectPlayersForCourts(free, courts);
-    const activeCourts = selected.length / 4;
-    const allM = selected.filter(p=>(p.gender||'m')==='m');
-    const allF = selected.filter(p=>p.gender==='f');
-
-    // コートタイプのパターン候補
-    const PATTERNS = {
-      1: [['MF'],['MM'],['FF']],
-      2: [['MM','FF'],['MM','MF'],['FF','MF'],['MM','MM'],['FF','FF'],['MF','MF']],
-      3: [['MM','FF','MF'],['MM','MM','FF'],['MM','FF','FF'],['MM','MM','MF'],['FF','FF','MF']],
-      4: [['MM','FF','MF','MF'],['MM','MM','FF','MF'],['MM','FF','FF','MF'],
-          ['MM','MM','FF','FF'],['MM','MM','MM','MF'],['FF','FF','FF','MF']],
-    };
-
-    // ① 選ばれた人の男女構成で実現可能なプランを絞る
-    const feasible = (PATTERNS[activeCourts]||[]).filter(plan => {
-      const mNeed = plan.filter(t=>t==='MM').length*4 + plan.filter(t=>t==='MF').length*2;
-      const fNeed = plan.filter(t=>t==='FF').length*4 + plan.filter(t=>t==='MF').length*2;
-      return allM.length>=mNeed && allF.length>=fNeed;
-    });
-    if(!feasible.length) return makePairsOptimal(selected, 'none');
-
-    // ② typeHistで最も少ないタイプを含むプランを優先（ラウンド間でMM/FF/MFを均等化）
-    const planScores = feasible.map(plan => ({
-      plan,
-      score: plan.reduce((s,t) => s+(typeHist[t]||0), 0)
-    }));
-    planScores.sort((a,b) => a.score-b.score);
-    const minScore = planScores[0].score;
-    const bestPlans = planScores.filter(p => p.score===minScore);
-    const plan = bestPlans[Math.floor(Math.random()*bestPlans.length)].plan;
-
-    // ③ プランに従いペアを組む
-    const mq=shuffle([...allM]), fq=shuffle([...allF]);
-    const teams=[];
-    for(const type of plan){
-      if(type==='MM'&&mq.length>=4){ teams.push([mq.shift(),mq.shift()]); teams.push([mq.shift(),mq.shift()]); }
-      else if(type==='FF'&&fq.length>=4){ teams.push([fq.shift(),fq.shift()]); teams.push([fq.shift(),fq.shift()]); }
-      else if(type==='MF'&&mq.length>=2&&fq.length>=2){ teams.push([mq.shift(),fq.shift()]); teams.push([mq.shift(),fq.shift()]); }
+    if (!bestCourts) return null;
+    const matches = [], warnings = [];
+    for (let i = 0; i < bestCourts.length; i++) {
+      const [t1, t2] = bestCourts[i];
+      matches.push({court: i+1, team1: t1, team2: t2});
     }
-    // ④ typeHistを更新（次のラウンドで均等化に使う）
-    plan.forEach(t => { typeHist[t]=(typeHist[t]||0)+1; });
-
-    // 余りを補完
-    const usedIds=new Set(teams.flat().map(p=>p.id));
-    const rem=selected.filter(p=>!usedIds.has(p.id));
-    for(let i=0;i+1<rem.length&&teams.length<neededTeams;i+=2) teams.push([rem[i],rem[i+1]]);
-    return teams;
+    return {matches, waiting, warnings};
   }
 
-  // Fallback
-  const selected = selectPlayersForCourts(free, courts);
-  return makePairsOptimal(selected, 'none');
+  const planScores = feasible.map(plan => ({
+    plan,
+    score: plan.reduce((s, t) => s + (typeHist[t] || 0), 0)
+  }));
+  planScores.sort((a, b) => a.score - b.score);
+  const minPS = planScores[0].score;
+  const bestPlans = planScores.filter(p => p.score === minPS);
+  const plan = bestPlans[Math.floor(Math.random() * bestPlans.length)].plan;
+
+  // Build court assignments for this plan using multi-trial optimization
+  let bestCourts = null, bestScore = Infinity;
+  const TRIALS = 500;
+
+  for (let trial = 0; trial < TRIALS; trial++) {
+    const mq = shuffle([...allM]), fq = shuffle([...allF]);
+    const courts = [];
+    let valid = true;
+    for (const type of plan) {
+      if (type === 'MM' && mq.length >= 4) {
+        courts.push([[mq.shift(), mq.shift()], [mq.shift(), mq.shift()]]);
+      } else if (type === 'FF' && fq.length >= 4) {
+        courts.push([[fq.shift(), fq.shift()], [fq.shift(), fq.shift()]]);
+      } else if (type === 'MF' && mq.length >= 2 && fq.length >= 2) {
+        courts.push([[mq.shift(), fq.shift()], [mq.shift(), fq.shift()]]);
+      } else { valid = false; break; }
+    }
+    if (!valid || courts.length !== activeCourts) continue;
+    const sc = scoreFullAssignment(courts, gmode, activeFixed);
+    if (sc < bestScore) { bestScore = sc; bestCourts = courts; }
+  }
+
+  if (!bestCourts) return null;
+
+  plan.forEach(t => { typeHist[t] = (typeHist[t] || 0) + 1; });
+
+  const matches = [], warnings = [];
+  for (let i = 0; i < bestCourts.length; i++) {
+    const [t1, t2] = bestCourts[i];
+    const exclMsg = checkExcl(t1, t2);
+    if (exclMsg) warnings.push({court: i+1, msg: exclMsg, type: 'excl'});
+    else if (opts.avoid) {
+      const rep = (pairHist[pk(t1[0].id,t1[1].id)]||0) + (pairHist[pk(t2[0].id,t2[1].id)]||0);
+      if (rep > 0) warnings.push({court: i+1, msg: '⚠ 以前同じペアを含む', type: 'warn'});
+    }
+    const ct = courtGenderType(t1, t2);
+    if (ct === 'mixed') warnings.push({court: i+1, msg: '', type: ''});
+    matches.push({court: i+1, team1: t1, team2: t2});
+  }
+  return {matches, waiting, warnings: warnings.filter(w => w.msg)};
 }
 
 
@@ -1099,49 +1175,7 @@ function courtGenderLabel(t1, t2) {
   return '';
 }
 
-// ===== SCORE / CHECK =====
-function scoreArrangement(t1,t2,gmode){
-  let s=0;
-  const exclKeys=exclPairs.map(p=>pk(p.a,p.b));
-  if(exclKeys.includes(pk(t1[0].id,t1[1].id))) s+=1000;
-  if(exclKeys.includes(pk(t2[0].id,t2[1].id))) s+=1000;
-  if(opts.avoid){
-    s+=(pairHist[pk(t1[0].id,t1[1].id)]||0)*10;
-    s+=(pairHist[pk(t2[0].id,t2[1].id)]||0)*10;
-  }
-  // 前回と同じペアにペナルティ（連続同一ペア回避）
-  if(prevPairKeys.has(pk(t1[0].id,t1[1].id))) s+=50;
-  if(prevPairKeys.has(pk(t2[0].id,t2[1].id))) s+=50;
-  if(opts.level){
-    s+=Math.abs(t1[0].level-t1[1].level)*2;
-    s+=Math.abs(t2[0].level-t2[1].level)*2;
-  }
-  // Gender scoring — penalize arrangements that don't match the mode
-  if(gmode==='mixed'){
-    // Penalize non-mixed pairs heavily
-    const isMixed=t=>t.some(p=>(p.gender||'m')==='m')&&t.some(p=>p.gender==='f');
-    if(!isMixed(t1)) s+=500;
-    if(!isMixed(t2)) s+=500;
-  } else if(gmode==='separate'){
-    const gx=p=>(p.gender||'m');
-    const isMixedT=t=>t.some(p=>gx(p)==='m')&&t.some(p=>gx(p)==='f');
-    const isMaleT  =t=>t.every(p=>gx(p)==='m');
-    const isFemaleT=t=>t.every(p=>gx(p)==='f');
-    // Penalize mixed pairs (MF pair)
-    if(isMixedT(t1)) s+=500;
-    if(isMixedT(t2)) s+=500;
-    // Penalize MM vs FF on same court
-    if((isMaleT(t1)&&isFemaleT(t2))||(isFemaleT(t1)&&isMaleT(t2))) s+=300;
-  } else if(gmode==='balance'){
-    const gx=p=>(p.gender||'m');
-    const isMaleT  =t=>t.every(p=>gx(p)==='m');
-    const isFemaleT=t=>t.every(p=>gx(p)==='f');
-    // Penalize MM vs FF on same court
-    if((isMaleT(t1)&&isFemaleT(t2))||(isFemaleT(t1)&&isMaleT(t2))) s+=300;
-  }
-  return s;
-}
-
+// ===== CHECK =====
 function checkExcl(t1,t2){
   const exclKeys=exclPairs.map(p=>pk(p.a,p.b));
   if(exclKeys.includes(pk(t1[0].id,t1[1].id))) return `⛔ 排除ペア: ${t1[0].name} & ${t1[1].name}`;
@@ -1296,13 +1330,15 @@ function syncAfterSwap(){
   oldPlaySet.forEach(id=>{ if(!newPlaySet.has(id) && playHist[id]>0) playHist[id]--; });
   newPlaySet.forEach(id=>{ if(!oldPlaySet.has(id)) playHist[id]=(playHist[id]||0)+1; });
 
-  // pairHistを補正: 旧ペアを減らし、新ペアを増やす
+  // pairHist / courtHistを補正: 旧を減らし、新を増やす
   (last.courts||[]).forEach(c=>{
     if(c.team1ids&&c.team1ids.length===2){ const k=pk(c.team1ids[0],c.team1ids[1]); if(pairHist[k]>0) pairHist[k]--; }
     if(c.team2ids&&c.team2ids.length===2){ const k=pk(c.team2ids[0],c.team2ids[1]); if(pairHist[k]>0) pairHist[k]--; }
+    const allIds=[...(c.team1ids||[]),...(c.team2ids||[])];
+    unrecCourt(allIds);
   });
   curMatches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
   });
 
   // gameHistoryの最新エントリを更新
@@ -1333,12 +1369,13 @@ function regenResult(){
   // 前回の generateMatches で記録した playHist/pairHist/gameHistory を一つ戻す
   if(gameHistory.length > 0 && curRound > 1) {
     const last = gameHistory[0];
-    // pairHistを戻す
+    // pairHist / courtHistを戻す
     last.courts.forEach(c => {
       const t1ids = c.team1ids || [];
       const t2ids = c.team2ids || [];
       if(t1ids.length===2) { const k=[Math.min(...t1ids),Math.max(...t1ids)].join('-'); if(pairHist[k]>0) pairHist[k]--; }
       if(t2ids.length===2) { const k=[Math.min(...t2ids),Math.max(...t2ids)].join('-'); if(pairHist[k]>0) pairHist[k]--; }
+      unrecCourt([...t1ids,...t2ids]);
     });
     // playHistを戻す
     if(last.playingIds) last.playingIds.forEach(id => { if(playHist[id]>0) playHist[id]--; });
@@ -1354,7 +1391,7 @@ function regenResult(){
   if(result.matches.length===0){alert('コートを埋めるのに十分な参加者がいません');return;}
 
   result.matches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
     [...m.team1,...m.team2].forEach(p=>{ playHist[p.id]=(playHist[p.id]||0)+1; });
   });
 
@@ -1373,7 +1410,6 @@ function regenResult(){
     time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
   });
 
-  // 前回待機・前回ペア情報を更新（次ラウンドの連続回避用）
   prevWaitIds = new Set(result.waiting.map(p=>p.id));
   prevPairKeys = new Set();
   result.matches.forEach(m=>{
@@ -1418,7 +1454,7 @@ function updateStats(){
 
 function clearHistory(){
   if(!confirm('履歴とペア記録をすべてクリアしますか？')) return;
-  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; curRound=1; saveAll(); renderHistory();
+  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; curRound=1; saveAll(); renderHistory();
   document.getElementById('result-area').innerHTML='';
 }
 
