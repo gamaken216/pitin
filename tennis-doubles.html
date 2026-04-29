@@ -301,6 +301,9 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
         <button class="btn btn-secondary" onclick="clearHistory()" style="font-size:0.75rem;">履歴クリア</button>
       </div>
       <div id="history-list"></div>
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">
+        <button class="btn btn-red" onclick="resetMembers()" style="font-size:0.75rem;">⚠ メンバーを初期状態に戻す</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1456,6 +1459,19 @@ function clearHistory(){
   if(!confirm('履歴とペア記録をすべてクリアしますか？')) return;
   gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; curRound=1; saveAll(); renderHistory();
   document.getElementById('result-area').innerHTML='';
+}
+
+function resetMembers(){
+  if(!confirm('メンバーをファイルの初期リストに戻します。\n現在のメンバー・履歴はすべて消えます。よろしいですか？')) return;
+  localStorage.removeItem('tmd-members');
+  localStorage.removeItem('tmd-history');
+  localStorage.removeItem('tmd-phist');
+  localStorage.removeItem('tmd-playhist');
+  localStorage.removeItem('tmd-typehist');
+  localStorage.removeItem('tmd-courthist');
+  localStorage.removeItem('tmd-fixed');
+  localStorage.removeItem('tmd-excl');
+  location.reload();
 }
 
 // ===== INIT =====
