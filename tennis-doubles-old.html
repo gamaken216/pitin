@@ -316,7 +316,6 @@ let pairHist    = JSON.parse(localStorage.getItem('tmd-phist')    || '{}');
 let playHist    = JSON.parse(localStorage.getItem('tmd-playhist') || '{}');
 let typeHist    = JSON.parse(localStorage.getItem('tmd-typehist') || '{}');
 let courtHist   = JSON.parse(localStorage.getItem('tmd-courthist')|| '{}');
-let courtGroupHist = JSON.parse(localStorage.getItem('tmd-courtgrouphist')|| '{}');
 let fixedPairs  = JSON.parse(localStorage.getItem('tmd-fixed')    || '[]');
 let exclPairs   = JSON.parse(localStorage.getItem('tmd-excl')     || '[]');
 let opts = {avoid:true, level:false};
@@ -498,7 +497,6 @@ function saveAll() {
   localStorage.setItem('tmd-playhist',  JSON.stringify(playHist));
   localStorage.setItem('tmd-typehist',  JSON.stringify(typeHist));
   localStorage.setItem('tmd-courthist', JSON.stringify(courtHist));
-  localStorage.setItem('tmd-courtgrouphist', JSON.stringify(courtGroupHist));
   localStorage.setItem('tmd-fixed',     JSON.stringify(fixedPairs));
   localStorage.setItem('tmd-excl',      JSON.stringify(exclPairs));
 }
@@ -823,7 +821,7 @@ function generateMatches() {
   if(!result){alert('有効な組み合わせを生成できませんでした。制約を見直してください。');return;}
 
   result.matches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2); recCourt(m); recCourtGroup(m);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
     [...m.team1,...m.team2].forEach(p=>{ playHist[p.id]=(playHist[p.id]||0)+1; });
   });
 
@@ -871,20 +869,6 @@ function unrecCourt(ids) {
       const k = pk(ids[i], ids[j]);
       if (courtHist[k] > 0) courtHist[k]--;
     }
-}
-function courtGroupKeyFromIds(ids) {
-  return [...ids].sort((a,b)=>a-b).join('-');
-}
-function courtGroupKeyFromPlayers(players) {
-  return courtGroupKeyFromIds(players.map(p=>p.id));
-}
-function recCourtGroup(match) {
-  const k = courtGroupKeyFromPlayers([...match.team1, ...match.team2]);
-  courtGroupHist[k] = (courtGroupHist[k] || 0) + 1;
-}
-function unrecCourtGroup(ids) {
-  const k = courtGroupKeyFromIds(ids);
-  if (courtGroupHist[k] > 0) courtGroupHist[k]--;
 }
 
 // ===== ENUMERATION HELPERS =====
@@ -949,9 +933,6 @@ function scoreFullAssignment(courtPairs, gmode, activeFixed) {
     for (let i = 0; i < four.length; i++)
       for (let j = i + 1; j < four.length; j++)
         score += (courtHist[pk(four[i].id, four[j].id)] || 0) * 3;
-
-    // Exact same four players on one court should be strongly avoided.
-    score += (courtGroupHist[courtGroupKeyFromPlayers(four)] || 0) * 1000;
 
     // Gender mode
     const g = p => (p.gender || 'm');
@@ -1357,10 +1338,10 @@ function syncAfterSwap(){
     if(c.team1ids&&c.team1ids.length===2){ const k=pk(c.team1ids[0],c.team1ids[1]); if(pairHist[k]>0) pairHist[k]--; }
     if(c.team2ids&&c.team2ids.length===2){ const k=pk(c.team2ids[0],c.team2ids[1]); if(pairHist[k]>0) pairHist[k]--; }
     const allIds=[...(c.team1ids||[]),...(c.team2ids||[])];
-    unrecCourt(allIds); unrecCourtGroup(allIds);
+    unrecCourt(allIds);
   });
   curMatches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2); recCourt(m); recCourtGroup(m);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
   });
 
   // gameHistoryの最新エントリを更新
@@ -1397,7 +1378,7 @@ function regenResult(){
       const t2ids = c.team2ids || [];
       if(t1ids.length===2) { const k=[Math.min(...t1ids),Math.max(...t1ids)].join('-'); if(pairHist[k]>0) pairHist[k]--; }
       if(t2ids.length===2) { const k=[Math.min(...t2ids),Math.max(...t2ids)].join('-'); if(pairHist[k]>0) pairHist[k]--; }
-      unrecCourt([...t1ids,...t2ids]); unrecCourtGroup([...t1ids,...t2ids]);
+      unrecCourt([...t1ids,...t2ids]);
     });
     // playHistを戻す
     if(last.playingIds) last.playingIds.forEach(id => { if(playHist[id]>0) playHist[id]--; });
@@ -1413,7 +1394,7 @@ function regenResult(){
   if(result.matches.length===0){alert('コートを埋めるのに十分な参加者がいません');return;}
 
   result.matches.forEach(m=>{
-    recPair(m.team1); recPair(m.team2); recCourt(m); recCourtGroup(m);
+    recPair(m.team1); recPair(m.team2); recCourt(m);
     [...m.team1,...m.team2].forEach(p=>{ playHist[p.id]=(playHist[p.id]||0)+1; });
   });
 
@@ -1476,7 +1457,7 @@ function updateStats(){
 
 function clearHistory(){
   if(!confirm('履歴とペア記録をすべてクリアしますか？')) return;
-  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; courtGroupHist={}; curRound=1; saveAll(); renderHistory();
+  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; curRound=1; saveAll(); renderHistory();
   document.getElementById('result-area').innerHTML='';
 }
 
@@ -1488,7 +1469,6 @@ function resetMembers(){
   localStorage.removeItem('tmd-playhist');
   localStorage.removeItem('tmd-typehist');
   localStorage.removeItem('tmd-courthist');
-  localStorage.removeItem('tmd-courtgrouphist');
   localStorage.removeItem('tmd-fixed');
   localStorage.removeItem('tmd-excl');
   location.reload();
