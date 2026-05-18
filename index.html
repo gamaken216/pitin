@@ -352,17 +352,26 @@
     <h2 class="section-title">練習ギャラリー</h2>
     <p style="color:var(--gray); font-size:0.92rem; margin-bottom:2rem;">実際の練習・試合の様子です。</p>
     <div class="video-grid">
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/Wszld99-1Xs/hqdefault.jpg" alt="練習動画1" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/Wszld99-1Xs?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/qMk6tp5G_EE/hqdefault.jpg" alt="練習動画2" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/qMk6tp5G_EE?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/cJHMDbx9KGU/hqdefault.jpg" alt="練習動画3" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/cJHMDbx9KGU?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/mO9iwxX3eh8/hqdefault.jpg" alt="練習動画4" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/mO9iwxX3eh8?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/E-Ml5Fdnq4Q/hqdefault.jpg" alt="練習動画5" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/E-Ml5Fdnq4Q?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
-      <div class="video-thumb" onclick="this.classList.add('playing')"><img src="https://img.youtube.com/vi/gUxt9hTYVoc/hqdefault.jpg" alt="練習動画6" loading="lazy"><div class="video-overlay">▶</div><iframe src="https://www.youtube.com/embed/gUxt9hTYVoc?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="Wszld99-1Xs"><img src="https://img.youtube.com/vi/Wszld99-1Xs/hqdefault.jpg" alt="練習動画1" loading="lazy"><div class="video-overlay">▶</div></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="qMk6tp5G_EE"><img src="https://img.youtube.com/vi/qMk6tp5G_EE/hqdefault.jpg" alt="練習動画2" loading="lazy"><div class="video-overlay">▶</div></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="cJHMDbx9KGU"><img src="https://img.youtube.com/vi/cJHMDbx9KGU/hqdefault.jpg" alt="練習動画3" loading="lazy"><div class="video-overlay">▶</div></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="mO9iwxX3eh8"><img src="https://img.youtube.com/vi/mO9iwxX3eh8/hqdefault.jpg" alt="練習動画4" loading="lazy"><div class="video-overlay">▶</div></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="E-Ml5Fdnq4Q"><img src="https://img.youtube.com/vi/E-Ml5Fdnq4Q/hqdefault.jpg" alt="練習動画5" loading="lazy"><div class="video-overlay">▶</div></div>
+      <div class="video-thumb" onclick="playVideo(this)" data-id="gUxt9hTYVoc"><img src="https://img.youtube.com/vi/gUxt9hTYVoc/hqdefault.jpg" alt="練習動画6" loading="lazy"><div class="video-overlay">▶</div></div>
     </div>
   </div>
 </section>
 
 <script>
+function playVideo(el) {
+  el.classList.add('playing');
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://www.youtube.com/embed/' + el.dataset.id + '?autoplay=1';
+  iframe.allow = 'autoplay; encrypted-media';
+  iframe.allowFullscreen = true;
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
+  el.appendChild(iframe);
+}
 function toggleMenu() {
   const btn = document.getElementById('hamburger');
   const nav = document.getElementById('nav-links');
