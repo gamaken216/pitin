@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231f8a4c' stroke-width='7'/><path d='M14 32 Q50 50 14 68 M86 32 Q50 50 86 68' fill='none' stroke='%231f8a4c' stroke-width='5'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Old+Mincho:wght@700;900&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --ink: #1c211e;
@@ -63,7 +63,7 @@
     .hero-kicker span.bar { width: 36px; height: 2px; background: var(--green); }
     .hero h1 { font-weight: 900; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height: 1; letter-spacing: 0.01em; }
     .hero h1 .sub { display: block; font-size: 0.24em; font-weight: 700; letter-spacing: 0.3em; color: var(--muted); margin-bottom: 0.9rem; }
-    .hero h1 .name { white-space: nowrap; }
+    .hero h1 .name { white-space: nowrap; font-family: 'Zen Old Mincho', serif; }
     .hero h1 .name b { color: var(--green); font-weight: 900; }
     .hero-lead { font-size: 1.02rem; line-height: 1.95; margin-top: 1.6rem; max-width: 30em; color: #34382f; }
     .hero-meta { margin-top: 1.4rem; font-size: 0.88rem; letter-spacing: 0.03em; color: var(--muted); }
@@ -117,8 +117,8 @@
 
     /* ---- Fee ---- */
     .fee-top { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 3rem; align-items: center; }
-    .fee-big { font-family: var(--grotesk); font-weight: 800; font-size: clamp(4.5rem, 13vw, 8rem); line-height: 0.9; color: var(--green); letter-spacing: -0.01em; }
-    .fee-big small { font-size: 0.3em; font-weight: 700; vertical-align: 0.4em; }
+    .fee-big { font-family: var(--grotesk); font-weight: 800; font-size: clamp(3.4rem, 8.5vw, 5.2rem); line-height: 0.95; color: var(--green); letter-spacing: -0.01em; }
+    .fee-big small { font-size: 0.4em; font-weight: 700; letter-spacing: 0.02em; }
     .fee-cap { font-family: var(--grotesk); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 0.6rem; }
     .fee-desc { font-size: 1rem; line-height: 1.7; margin-top: 1.2rem; }
     .fee-img img { width: 100%; aspect-ratio: 16/10; object-fit: cover; }
@@ -357,7 +357,7 @@
     </div>
     <div class="fee-top">
       <div class="fee-figure">
-        <div class="fee-big"><small>¥</small>100</div>
+        <div class="fee-big">100<small>円</small></div>
         <div class="fee-cap">Per session — 1回あたり</div>
         <p class="fee-desc">参加のたびにお支払いいただきます。月会費・入会金はありません。</p>
       </div>
