@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブログ管理画面 | ピットイン（ローカル専用）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:#1c211e; --paper:#f6f3ea; --paper-2:#efeade; --line:rgba(28,33,30,.18);
+      --line-strong:rgba(28,33,30,.42); --muted:#6a6f68; --green:#1f8a4c; --green-dark:#18713e;
+      --green-deep:#123a26; --green-soft:#8fd6a8;
+      --sans:'Zen Kaku Gothic New',sans-serif; --grotesk:'Archivo','Zen Kaku Gothic New',sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:var(--sans); background:var(--paper); color:var(--ink); line-height:1.7; padding:2.5rem 1.2rem 5rem; }
+    .wrap { max-width:720px; margin:0 auto; }
+    h1 { font-weight:900; font-size:1.6rem; letter-spacing:.01em; }
+    .tagline { font-family:var(--grotesk); font-weight:700; font-size:.7rem; letter-spacing:.22em; text-transform:uppercase; color:var(--green); margin-bottom:.5rem; }
+    .note { background:var(--paper-2); border:1px solid var(--line); padding:.9rem 1.1rem; font-size:.84rem; color:#46493f; margin:1.2rem 0 2rem; line-height:1.7; }
+    .step { font-family:var(--grotesk); font-weight:800; font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--green); margin:2.2rem 0 .8rem; padding-bottom:.5rem; border-bottom:2px solid var(--ink); }
+    label { display:block; font-weight:700; font-size:.86rem; margin:1.1rem 0 .35rem; }
+    label .opt { font-weight:400; color:var(--muted); font-size:.78rem; }
+    input[type=text], input[type=date], textarea {
+      width:100%; font-family:var(--sans); font-size:.95rem; color:var(--ink);
+      background:#fff; border:1px solid var(--line-strong); padding:.7rem .8rem;
+    }
+    textarea { min-height:180px; resize:vertical; line-height:1.9; }
+    input[type=file] { font-size:.85rem; margin-top:.2rem; }
+    .hint { font-size:.76rem; color:var(--muted); margin-top:.3rem; }
+    .btn { display:inline-block; font-family:var(--sans); font-weight:700; font-size:.9rem; letter-spacing:.04em; border:none; cursor:pointer; padding:.85em 1.8em; text-decoration:none; }
+    .btn-green { background:var(--green); color:#fff; } .btn-green:hover { background:var(--green-dark); }
+    .btn-ink { background:var(--ink); color:var(--paper); } .btn-ink:hover { background:#000; }
+    .btn-out { background:transparent; color:var(--ink); border:1.5px solid var(--ink); } .btn-out:hover { background:var(--ink); color:var(--paper); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .row { display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.8rem; align-items:center; }
+    #folderState { font-size:.84rem; color:var(--muted); }
+    #folderState b { color:var(--green); }
+    #status { margin-top:1.5rem; padding:1rem 1.1rem; font-size:.86rem; line-height:1.7; display:none; white-space:pre-wrap; }
+    #status.ok { display:block; background:#e7f3ec; border:1px solid var(--green); color:#14532b; }
+    #status.err { display:block; background:#fbeae7; border:1px solid #c0492f; color:#7a2418; }
+    details { margin-top:2.5rem; border-top:1px solid var(--line); padding-top:1.2rem; }
+    summary { cursor:pointer; font-weight:700; font-size:.88rem; }
+    details .body { margin-top:1rem; font-size:.85rem; color:#46493f; line-height:1.8; }
+    #fallbackEntry { width:100%; min-height:140px; font-family:monospace; font-size:.8rem; margin-top:.6rem; }
+    .warn { color:#c0492f; font-weight:700; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tagline">Pit·Inn — Blog Admin（ローカル専用）</div>
+  <h1>ブログ管理画面</h1>
+
+  <div class="note">
+    🔒 このページは<strong>あなたのPCの中だけ</strong>で動きます（サーバーには何も送りません）。<br>
+    フォームに入力して「保存して反映」を押すと、<code>blog/</code> に記事ページが作られ、<code>posts.js</code> に自動登録されます。<br>
+    そのあとは、いつも通り <strong>GitHub Desktop でコミット → Vercel が自動公開</strong>。<br>
+    <span class="warn">※ Chrome または Edge で開いてください（フォルダ書き込み機能を使います）。</span>
+  </div>
+
+  <div class="step">Step 1 — サイトのフォルダを選ぶ</div>
+  <div class="row">
+    <button class="btn btn-ink" id="pickBtn">📁 pitin フォルダを選択</button>
+    <span id="folderState">未選択</span>
+  </div>
+  <div class="hint">この <code>admin.html</code> が入っているフォルダ（pitin）を選んでください。最初の1回だけ許可を出せばOKです。</div>
+
+  <div class="step">Step 2 — 記事を書く</div>
+
+  <label>日付</label>
+  <input type="date" id="f-date">
+
+  <label>タイトル</label>
+  <input type="text" id="f-title" placeholder="例：6月の練習会を開催しました">
+
+  <label>一覧の紹介文 <span class="opt">（トップ・一覧に出る短い説明。空なら本文の先頭から自動作成）</span></label>
+  <input type="text" id="f-excerpt" placeholder="例：暖かくなり参加者も増えてきました。新メンバーも歓迎です。">
+
+  <label>本文 <span class="opt">（段落の区切りは「空行」を1つ入れてください）</span></label>
+  <textarea id="f-body" placeholder="1段落目の本文をここに書きます。&#10;&#10;空行をはさむと、次の段落になります。"></textarea>
+
+  <label>写真 <span class="opt">（任意。選ぶと blog/ に保存して記事に表示します）</span></label>
+  <input type="file" id="f-image" accept="image/*">
+  <div class="hint">写真なしでもOK（その場合はブランドのプレースホルダー画像が一覧に入ります）。</div>
+
+  <div class="row">
+    <button class="btn btn-out" id="previewBtn">👁 プレビュー</button>
+    <button class="btn btn-green" id="saveBtn">💾 保存して反映</button>
+  </div>
+
+  <div id="status"></div>
+
+  <details>
+    <summary>うまく動かないとき（手動で使う方法）</summary>
+    <div class="body">
+      Firefox など対応外のブラウザでは、フォルダ書き込みができません。その場合はこちら：
+      <ol style="margin:.8rem 0 0 1.2rem;">
+        <li>「プレビュー」で内容を確認</li>
+        <li>下の「記事HTMLをダウンロード」を押し、できたファイルを <code>blog/</code> に入れる（写真も <code>blog/</code> に入れる）</li>
+        <li>下のテキストを <code>posts.js</code> の <code>const POSTS = [</code> のすぐ下に貼り付ける</li>
+      </ol>
+      <div class="row" style="margin-top:1rem;">
+        <button class="btn btn-out" id="dlBtn">⬇ 記事HTMLをダウンロード</button>
+        <button class="btn btn-out" id="copyBtn">📋 posts.js用テキストをコピー</button>
+      </div>
+      <textarea id="fallbackEntry" readonly placeholder="ここに posts.js 用のテキストが出ます"></textarea>
+    </div>
+  </details>
+</div>
+
+<script>
+// ===== 状態 =====
+let rootHandle = null;            // pitin フォルダのハンドル
+
+const $ = (id) => document.getElementById(id);
+const supportsFS = 'showDirectoryPicker' in window;
+
+// 今日の日付を初期値に
+(function initDate(){
+  const d = new Date();
+  const p = (n)=>String(n).padStart(2,'0');
+  $('f-date').value = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+})();
+
+if (!supportsFS) {
+  $('pickBtn').disabled = true;
+  $('saveBtn').disabled = true;
+  $('folderState').textContent = 'このブラウザは自動保存に未対応（手動モードをご利用ください）';
+}
+
+// ===== ユーティリティ =====
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function jsStr(s){ return "'" + String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\s*\n\s*/g,' ').trim() + "'"; }
+
+// 入力を集める＋検証
+function collect(){
+  const dateRaw = $('f-date').value;            // YYYY-MM-DD
+  const title = $('f-title').value.trim();
+  let excerpt = $('f-excerpt').value.trim();
+  const body = $('f-body').value.replace(/\r\n/g,'\n').trim();
+  const imageFile = $('f-image').files[0] || null;
+  if(!dateRaw) throw new Error('日付を入れてください。');
+  if(!title) throw new Error('タイトルを入れてください。');
+  if(!body) throw new Error('本文を入れてください。');
+
+  const dateDisp = dateRaw.replace(/-/g,'.');   // 2026.06.15
+  const slug = dateRaw.replace(/-/g,'');        // 20260615
+  const paras = body.split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
+  if(!excerpt) excerpt = paras[0].replace(/\n/g,'').slice(0,70) + (paras[0].length>70?'…':'');
+
+  let imgName = '';
+  if(imageFile){
+    const ext = (imageFile.name.match(/\.[a-zA-Z0-9]+$/) || ['.jpg'])[0].toLowerCase();
+    imgName = slug + ext;                       // 20260615.jpg
+  }
+  return { dateDisp, slug, title, excerpt, paras, imageFile, imgName,
+           fileName: slug + '.html' };
+}
+
+// 記事HTMLを組み立て（article.css を読み込む形＝既存記事と同じ作り）
+function buildArticleHtml(d){
+  const favicon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231f8a4c' stroke-width='7'/><path d='M14 32 Q50 50 14 68 M86 32 Q50 50 86 68' fill='none' stroke='%231f8a4c' stroke-width='5'/></svg>";
+  const img = d.imgName ? `\n  <img src="${d.imgName}" alt="${esc(d.title)}" class="article-photo">\n` : '\n';
+  const paras = d.paras.map(p => '    <p>' + esc(p).replace(/\n/g,'<br>\n        ') + '</p>').join('\n');
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${esc(d.title)} | フレッシュテニスクラブ ピットイン</title>
+  <link rel="icon" href="${favicon}">
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">PIT<b>·</b>INN</a>
+  <a href="../index.html#blog" class="nav-back">← ブログ一覧に戻る</a>
+</nav>
+
+<article class="article-wrap">
+  <header class="article-head">
+    <div class="tag"><span class="lbl">BLOG</span><span class="date">${d.dateDisp}</span></div>
+    <h1>${esc(d.title)}</h1>
+  </header>
+${img}
+  <div class="article-text">
+${paras}
+  </div>
+
+  <div class="cta-box">
+    <p>見学・参加のご連絡は <strong>gamaken3@gmail.com</strong> までお気軽にどうぞ。担当は松本です。よろしくお願いします。</p>
+    <a href="mailto:gamaken3@gmail.com" class="cta-btn">メールで問い合わせる →</a>
+  </div>
+
+  <a href="../index.html#blog" class="back-link">← ブログ一覧に戻る</a>
+</article>
+
+<footer>
+  <div class="fwrap">
+    <div class="fw-logo">PIT<b>·</b>INN</div>
+    <small>© 2025 フレッシュテニスクラブ ピットイン ／ 富山市</small>
+  </div>
+</footer>
+
+</body>
+</html>
+`;
+}
+
+// posts.js に挿入する1件分
+function buildPostsEntry(d){
+  const lines = [
+    '  {',
+    '    date: ' + jsStr(d.dateDisp) + ',',
+    '    title: ' + jsStr(d.title) + ',',
+    '    excerpt: ' + jsStr(d.excerpt) + ',',
+    '    url: ' + jsStr('blog/' + d.fileName) + (d.imgName ? ',' : ''),
+  ];
+  if(d.imgName) lines.push('    img: ' + jsStr('blog/' + d.imgName));
+  lines.push('  },');
+  return lines.join('\n');
+}
+
+// ===== フォルダ選択 =====
+$('pickBtn').addEventListener('click', async () => {
+  try {
+    rootHandle = await window.showDirectoryPicker();
+    // posts.js があるか軽く確認
+    await rootHandle.getFileHandle('posts.js');
+    $('folderState').innerHTML = '選択中：<b>' + rootHandle.name + '</b> ✓';
+    showStatus('フォルダを選択しました。記事を書いて「保存して反映」を押してください。', true);
+  } catch(e){
+    if(e && e.name === 'NotFoundError'){
+      showStatus('そのフォルダに posts.js が見つかりません。admin.html と同じ pitin フォルダを選んでください。', false);
+      rootHandle = null;
+      $('folderState').textContent = '未選択';
+    } else if(e && e.name !== 'AbortError'){
+      showStatus('フォルダを選べませんでした：' + e.message, false);
+    }
+  }
+});
+
+// ===== プレビュー =====
+$('previewBtn').addEventListener('click', async () => {
+  try {
+    const d = collect();
+    let html = buildArticleHtml(d);
+    // プレビューは単体で開くので CSS を埋め込む
+    let css = '';
+    if(rootHandle){
+      try {
+        const blogDir = await rootHandle.getDirectoryHandle('blog');
+        const f = await (await blogDir.getFileHandle('article.css')).getFile();
+        css = await f.text();
+      } catch(_){}
+    }
+    if(css) html = html.replace('<link rel="stylesheet" href="article.css">', '<style>' + css + '</style>');
+    // 画像はプレビュー用に選択ファイルを表示
+    if(d.imageFile) html = html.replace('src="' + d.imgName + '"', 'src="' + URL.createObjectURL(d.imageFile) + '"');
+    const w = window.open();
+    w.document.open(); w.document.write(html); w.document.close();
+  } catch(e){ showStatus(e.message, false); }
+});
+
+// ===== 保存して反映 =====
+$('saveBtn').addEventListener('click', async () => {
+  try {
+    if(!rootHandle) throw new Error('先に Step 1 で「pitin フォルダを選択」してください。');
+    const d = collect();
+    const blogDir = await rootHandle.getDirectoryHandle('blog', {create:true});
+
+    // 既存ファイルの上書き確認
+    let exists = false;
+    try { await blogDir.getFileHandle(d.fileName); exists = true; } catch(_){}
+    if(exists && !confirm(`blog/${d.fileName} は既にあります。上書きしますか？`)) return;
+
+    // 1) 写真を保存
+    if(d.imageFile) await writeFile(blogDir, d.imgName, d.imageFile);
+    // 2) 記事HTMLを保存
+    await writeFile(blogDir, d.fileName, buildArticleHtml(d));
+    // 3) posts.js を更新（先頭に挿入）
+    const postsFh = await rootHandle.getFileHandle('posts.js');
+    let text = await (await postsFh.getFile()).text();
+    if(!text.includes('const POSTS = [')) throw new Error('posts.js の中に「const POSTS = [」が見つかりません。');
+    text = text.replace('const POSTS = [', 'const POSTS = [\n' + buildPostsEntry(d));
+    await writeFile(rootHandle, 'posts.js', text);
+
+    showStatus(
+      '✅ 反映しました。\n' +
+      '・blog/' + d.fileName + ' を作成\n' +
+      (d.imgName ? '・blog/' + d.imgName + ' を保存\n' : '') +
+      '・posts.js の先頭に登録\n\n' +
+      'このあと GitHub Desktop でコミット → Vercel が自動公開します。', true);
+    // フォームを軽くリセット（日付はそのまま）
+    $('f-title').value=''; $('f-excerpt').value=''; $('f-body').value=''; $('f-image').value='';
+  } catch(e){ showStatus('エラー：' + e.message, false); }
+});
+
+async function writeFile(dirHandle, name, contents){
+  const fh = await dirHandle.getFileHandle(name, {create:true});
+  const w = await fh.createWritable();
+  await w.write(contents);
+  await w.close();
+}
+
+// ===== 手動フォールバック =====
+$('dlBtn').addEventListener('click', () => {
+  try {
+    const d = collect();
+    const blob = new Blob([buildArticleHtml(d)], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = d.fileName; a.click();
+    $('fallbackEntry').value = buildPostsEntry(d);
+    showStatus('記事HTMLをダウンロードしました。下のテキストを posts.js に貼り付けてください（写真は手動で blog/ に入れて、名前を ' + (d.imgName||'（なし）') + ' にしてください）。', true);
+  } catch(e){ showStatus(e.message, false); }
+});
+$('copyBtn').addEventListener('click', () => {
+  try { const d = collect(); const t = buildPostsEntry(d); $('fallbackEntry').value = t;
+    navigator.clipboard.writeText(t); showStatus('posts.js用テキストをコピーしました。', true);
+  } catch(e){ showStatus(e.message, false); }
+});
+
+function showStatus(msg, ok){
+  const el = $('status'); el.textContent = msg; el.className = ok ? 'ok' : 'err';
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+</script>
+</body>
+</html>
