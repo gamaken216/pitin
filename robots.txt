@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 管理用ページはクロール対象外
+Disallow: /admin.html
+
+Sitemap: https://gamaken216.github.io/pitin/sitemap.xml
