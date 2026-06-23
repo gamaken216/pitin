@@ -5,7 +5,12 @@
       "mcp__claude_ai_Notion__notion-search",
       "Bash(git fetch *)",
       "Bash(git rev-list *)",
-      "WebFetch(domain:gamaken216.github.io)"
+      "WebFetch(domain:gamaken216.github.io)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://gamaken216.github.io/pitin/sitemap.xml\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://gamaken216.github.io/pitin/robots.txt\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://gamaken216.github.io/pitin/\")",
+      "Bash(curl -s \"https://gamaken216.github.io/pitin/sitemap.xml\")",
+      "Bash(curl -s -o /dev/null -w \"%{content_type}\\\\n\" \"https://gamaken216.github.io/pitin/sitemap.xml\")"
     ]
   }
 }
