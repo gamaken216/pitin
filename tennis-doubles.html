@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎾 DOUBLES MATCHER Ver.4 [DEMO]</title>
+<title>🎾 DOUBLES MATCHER Ver.5 [DEMO]</title>
 <meta name="description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ Doubles Matcher のデモ版。富山のフレッシュテニスグループ ピットインが制作。">
 <link rel="canonical" href="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="フレッシュテニスクラブ ピットイン">
-<meta property="og:title" content="DOUBLES MATCHER Ver.4 | ダブルス組み合わせアプリ">
+<meta property="og:title" content="DOUBLES MATCHER Ver.5 | ダブルス組み合わせアプリ">
 <meta property="og:description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ。">
 <meta property="og:url" content="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:image" content="https://gamaken216.github.io/pitin/app-screenshot.png">
@@ -149,7 +149,7 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 <body>
 <header>
   <span class="ball-icon">🎾</span>
-  <h1>DOUBLES MATCHER Ver.4</h1>
+  <h1>DOUBLES MATCHER Ver.5</h1>
 </header>
 <div class="container">
   <div class="tabs">
@@ -290,10 +290,21 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
       </div>
       <div class="pair-rule-list" id="excluded-pair-list"></div>
     </div>
+    <div class="card" style="border-color:rgba(240,160,48,.4);">
+      <div class="card-title" style="color:var(--orange);">🟠 コート固定 <span style="color:var(--muted);font-size:0.7rem;font-weight:400;text-transform:none;">— 特定の人を特定のコートに固定</span></div>
+      <div class="input-row" style="margin-bottom:12px;">
+        <select id="courtfix-p" style="flex:1;"></select>
+        <span style="color:var(--orange);font-weight:900;font-size:1rem;">→</span>
+        <select id="courtfix-court" style="width:90px;"></select>
+        <button class="btn" style="background:rgba(240,160,48,.3);border:1px solid var(--orange);color:#ffd9a0;" onclick="addCourtFixed()">+ 追加</button>
+      </div>
+      <div class="pair-rule-list" id="courtfixed-list"></div>
+    </div>
     <div class="card" style="border-color:rgba(168,230,61,.2);">
       <div style="font-size:0.82rem;color:var(--muted);line-height:1.8;">
         🔵 <b style="color:#aadaff;">固定ペア</b>：生成時に必ず同じチームになります。<br>
-        🔴 <b style="color:#ffaaaa;">排除ペア</b>：できるかぎり同じチームにしません。回避できない場合は警告を表示します。
+        🔴 <b style="color:#ffaaaa;">排除ペア</b>：できるかぎり同じチームにしません。回避できない場合は警告を表示します。<br>
+        🟠 <b style="color:var(--orange);">コート固定</b>：できるかぎりそのコート番号に配置されます（優先的にプレイもします）。欠席時や定員超過などで配置できない場合は自動調整され、その旨を警告表示します。
       </div>
     </div>
   </div>
@@ -329,6 +340,7 @@ let courtHist   = JSON.parse(localStorage.getItem('tmd-courthist')|| '{}');
 let courtGroupHist = JSON.parse(localStorage.getItem('tmd-courtgrouphist')|| '{}');
 let fixedPairs  = JSON.parse(localStorage.getItem('tmd-fixed')    || '[]');
 let exclPairs   = JSON.parse(localStorage.getItem('tmd-excl')     || '[]');
+let courtFixed  = JSON.parse(localStorage.getItem('tmd-courtfixed') || '[]'); // {id, court}
 let opts = {avoid:true, level:false};
 let curRound    = gameHistory.length + 1;
 let swapSel     = null;
@@ -511,6 +523,7 @@ function saveAll() {
   localStorage.setItem('tmd-courtgrouphist', JSON.stringify(courtGroupHist));
   localStorage.setItem('tmd-fixed',     JSON.stringify(fixedPairs));
   localStorage.setItem('tmd-excl',      JSON.stringify(exclPairs));
+  localStorage.setItem('tmd-courtfixed',JSON.stringify(courtFixed));
 }
 
 // ===== TABS =====
@@ -569,6 +582,7 @@ function removeMember(id) {
   members=members.filter(m=>m.id!==id);
   fixedPairs=fixedPairs.filter(p=>p.a!==id&&p.b!==id);
   exclPairs =exclPairs.filter(p=>p.a!==id&&p.b!==id);
+  courtFixed=courtFixed.filter(p=>p.id!==id);
   saveAll(); renderMemberList(); renderPairRules();
 }
 
@@ -765,10 +779,17 @@ function allAttend(flag) {
 // ===== PAIR RULES =====
 function renderPairRules() {
   const optHtml=members.map(m=>`<option value="${m.id}">${m.name} (L${m.level})</option>`).join('');
-  ['fixed-p1','fixed-p2','excl-p1','excl-p2'].forEach(id=>{
+  ['fixed-p1','fixed-p2','excl-p1','excl-p2','courtfix-p'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.innerHTML=optHtml;
   });
-  renderFixedList(); renderExcludedList();
+  const courtCourtEl=document.getElementById('courtfix-court');
+  if(courtCourtEl){
+    const maxCourts=parseInt(document.getElementById('court-count')?.value)||8;
+    let opts='';
+    for(let i=1;i<=Math.max(maxCourts,10);i++) opts+=`<option value="${i}">コート${i}</option>`;
+    courtCourtEl.innerHTML=opts;
+  }
+  renderFixedList(); renderExcludedList(); renderCourtFixedList();
 }
 
 function pk(a,b){return [Math.min(a,b),Math.max(a,b)].join('-');}
@@ -791,8 +812,31 @@ function addExcludedPair() {
   exclPairs.push({a,b}); saveAll(); renderExcludedList();
 }
 
+function addCourtFixed() {
+  const id=parseInt(document.getElementById('courtfix-p').value);
+  const court=parseInt(document.getElementById('courtfix-court').value);
+  if(!id||!court) return;
+  courtFixed=courtFixed.filter(cf=>cf.id!==id); // 1人1件（上書き）
+  courtFixed.push({id,court});
+  saveAll(); renderCourtFixedList();
+}
+
 function removeFixed(i){fixedPairs.splice(i,1);saveAll();renderFixedList();}
 function removeExcl(i){exclPairs.splice(i,1);saveAll();renderExcludedList();}
+function removeCourtFixed(i){courtFixed.splice(i,1);saveAll();renderCourtFixedList();}
+
+function renderCourtFixedList() {
+  const el=document.getElementById('courtfixed-list');
+  if(!el) return;
+  if(!courtFixed.length){el.innerHTML='<div style="color:var(--muted);font-size:.82rem;">登録なし</div>';return;}
+  el.innerHTML=courtFixed.map((cf,i)=>{
+    const name=members.find(m=>m.id===cf.id)?.name||'?';
+    return `<div class="pair-rule-item">
+      <span class="pair-names"><b style="color:var(--orange);">${name}</b> <span style="color:var(--orange);">→</span> <b style="color:var(--orange);">コート${cf.court}</b></span>
+      <button class="btn btn-sm" onclick="removeCourtFixed(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
 
 function renderFixedList() {
   const el=document.getElementById('fixed-pair-list');
@@ -828,8 +872,9 @@ function generateMatches() {
 
   const activeFixed=fixedPairs.filter(p=>
     attending.find(m=>m.id===p.a)&&attending.find(m=>m.id===p.b));
+  const activeCourtFixed=courtFixed.filter(cf=>attending.find(m=>m.id===cf.id));
 
-  const result=buildMatches(attending, courts, activeFixed);
+  const result=buildMatches(attending, courts, activeFixed, activeCourtFixed);
   if(!result){alert('有効な組み合わせを生成できませんでした。制約を見直してください。');return;}
 
   result.matches.forEach(m=>{
@@ -924,9 +969,19 @@ function allCourtGroupings(teams, numCourts) {
 }
 
 // ===== SCORING =====
-function scoreFullAssignment(courtPairs, gmode, activeFixed) {
+function scoreFullAssignment(courtPairs, gmode, activeFixed, activeCourtFixed) {
   let score = 0;
   const exclKeys = new Set(exclPairs.map(p => pk(p.a, p.b)));
+
+  // Court-fix: player should land on their designated court number
+  if (activeCourtFixed && activeCourtFixed.length) {
+    courtPairs.forEach((cp, idx) => {
+      const four = [...cp[0], ...cp[1]];
+      activeCourtFixed.forEach(cf => {
+        if (four.some(p => p.id === cf.id) && cf.court !== idx + 1) score += 20000;
+      });
+    });
+  }
 
   for (const [t1, t2] of courtPairs) {
     const k1 = pk(t1[0].id, t1[1].id), k2 = pk(t2[0].id, t2[1].id);
@@ -1002,7 +1057,8 @@ function selectPlayers(freePool, count) {
 }
 
 // ===== BUILD MATCHES =====
-function buildMatches(attending, courts, activeFixed) {
+function buildMatches(attending, courts, activeFixed, activeCourtFixed) {
+  activeCourtFixed = activeCourtFixed || [];
   const usedIds = new Set();
   const lockedTeams = [];
 
@@ -1030,7 +1086,7 @@ function buildMatches(attending, courts, activeFixed) {
   const gmode = getGmode();
 
   if (gmode === 'balance') {
-    return buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed);
+    return buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed, activeCourtFixed);
   }
 
   let bestCourts = null, bestScore = Infinity;
@@ -1041,7 +1097,7 @@ function buildMatches(attending, courts, activeFixed) {
       const allTeams = [...lockedTeams, ...pairing];
       const groupings = allCourtGroupings(allTeams, activeCourts);
       for (const grp of groupings) {
-        const sc = scoreFullAssignment(grp, gmode, activeFixed);
+        const sc = scoreFullAssignment(grp, gmode, activeFixed, activeCourtFixed);
         if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
       }
     }
@@ -1054,7 +1110,7 @@ function buildMatches(attending, courts, activeFixed) {
       const grp = [];
       for (let i = 0; i + 1 < allTeams.length; i += 2) grp.push([allTeams[i], allTeams[i + 1]]);
       if (grp.length !== activeCourts) continue;
-      const sc = scoreFullAssignment(grp, gmode, activeFixed);
+      const sc = scoreFullAssignment(grp, gmode, activeFixed, activeCourtFixed);
       if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
     }
   }
@@ -1079,11 +1135,28 @@ function buildMatches(attending, courts, activeFixed) {
     }
     matches.push({court: i+1, team1: t1, team2: t2});
   }
+  addCourtFixWarnings(matches, waiting, activeCourtFixed, warnings);
   return {matches, waiting, warnings};
 }
 
+// ===== COURT-FIX WARNINGS =====
+function addCourtFixWarnings(matches, waiting, activeCourtFixed, warnings) {
+  activeCourtFixed.forEach(cf => {
+    const name = members.find(m => m.id === cf.id)?.name || '?';
+    if (waiting.some(p => p.id === cf.id)) {
+      warnings.push({court: cf.court, msg: `⚠ ${name}さん（コート${cf.court}固定）は今回待機です`, type: 'warn'});
+      return;
+    }
+    const match = matches.find(m => [...m.team1, ...m.team2].some(p => p.id === cf.id));
+    if (match && match.court !== cf.court) {
+      warnings.push({court: match.court, msg: `⚠ ${name}さんをコート${cf.court}に固定できませんでした（現在コート${match.court}）`, type: 'warn'});
+    }
+  });
+}
+
 // ===== BALANCE MODE =====
-function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed) {
+function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFixed, activeCourtFixed) {
+  activeCourtFixed = activeCourtFixed || [];
   const allM = selected.filter(p => (p.gender || 'm') === 'm');
   const allF = selected.filter(p => p.gender === 'f');
   const gmode = 'balance';
@@ -1109,7 +1182,7 @@ function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFi
       for (const pairing of allPairings(selected)) {
         const allTeams = [...lockedTeams, ...pairing];
         for (const grp of allCourtGroupings(allTeams, activeCourts)) {
-          const sc = scoreFullAssignment(grp, gmode, activeFixed);
+          const sc = scoreFullAssignment(grp, gmode, activeFixed, activeCourtFixed);
           if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
         }
       }
@@ -1122,7 +1195,7 @@ function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFi
         const grp = [];
         for (let i = 0; i + 1 < allTeams.length; i += 2) grp.push([allTeams[i], allTeams[i + 1]]);
         if (grp.length !== activeCourts) continue;
-        const sc = scoreFullAssignment(grp, gmode, activeFixed);
+        const sc = scoreFullAssignment(grp, gmode, activeFixed, activeCourtFixed);
         if (sc < bestScore) { bestScore = sc; bestCourts = grp; }
       }
     }
@@ -1132,6 +1205,7 @@ function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFi
       const [t1, t2] = bestCourts[i];
       matches.push({court: i+1, team1: t1, team2: t2});
     }
+    addCourtFixWarnings(matches, waiting, activeCourtFixed, warnings);
     return {matches, waiting, warnings};
   }
 
@@ -1162,7 +1236,7 @@ function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFi
       } else { valid = false; break; }
     }
     if (!valid || courts.length !== activeCourts) continue;
-    const sc = scoreFullAssignment(courts, gmode, activeFixed);
+    const sc = scoreFullAssignment(courts, gmode, activeFixed, activeCourtFixed);
     if (sc < bestScore) { bestScore = sc; bestCourts = courts; }
   }
 
@@ -1183,6 +1257,7 @@ function buildBalanceMode(selected, waiting, lockedTeams, activeCourts, activeFi
     if (ct === 'mixed') warnings.push({court: i+1, msg: '', type: ''});
     matches.push({court: i+1, team1: t1, team2: t2});
   }
+  addCourtFixWarnings(matches, waiting, activeCourtFixed, warnings);
   return {matches, waiting, warnings: warnings.filter(w => w.msg)};
 }
 
@@ -1418,7 +1493,8 @@ function regenResult(){
   const courts=parseInt(document.getElementById('court-count').value)||2;
   const attending=members.filter(m=>m.attending);
   const activeFixed=fixedPairs.filter(p=>attending.find(m=>m.id===p.a)&&attending.find(m=>m.id===p.b));
-  const result=buildMatches(attending,courts,activeFixed);
+  const activeCourtFixed=courtFixed.filter(cf=>attending.find(m=>m.id===cf.id));
+  const result=buildMatches(attending,courts,activeFixed,activeCourtFixed);
   if(!result) return;
   if(result.matches.length===0){alert('コートを埋めるのに十分な参加者がいません');return;}
 
@@ -1501,6 +1577,7 @@ function resetMembers(){
   localStorage.removeItem('tmd-courtgrouphist');
   localStorage.removeItem('tmd-fixed');
   localStorage.removeItem('tmd-excl');
+  localStorage.removeItem('tmd-courtfixed');
   location.reload();
 }
 
