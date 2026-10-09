@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎾 DOUBLES MATCHER Ver.5 [DEMO]</title>
+<title>🎾 DOUBLES MATCHER Ver.6 [DEMO]</title>
 <meta name="description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ Doubles Matcher のデモ版。富山のフレッシュテニスグループ ピットインが制作。">
 <link rel="canonical" href="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="フレッシュテニスクラブ ピットイン">
-<meta property="og:title" content="DOUBLES MATCHER Ver.5 | ダブルス組み合わせアプリ">
+<meta property="og:title" content="DOUBLES MATCHER Ver.6 | ダブルス組み合わせアプリ">
 <meta property="og:description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ。">
 <meta property="og:url" content="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:image" content="https://gamaken216.github.io/pitin/app-screenshot.png">
@@ -28,7 +28,7 @@ header{background:linear-gradient(135deg,var(--green) 0%,#1a4a1a 100%);padding:1
 header h1{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:3px;color:var(--lime);text-shadow:0 2px 8px rgba(0,0,0,.5);}
 .ball-icon{font-size:2.2rem;animation:bounce 2s ease-in-out infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
-.container{max-width:960px;margin:0 auto;padding:16px;}
+.container{max-width:1280px;margin:0 auto;padding:16px;}
 
 .tabs{display:flex;gap:4px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:20px;border:1px solid var(--border);}
 .tab-btn{flex:1;padding:11px 4px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s;}
@@ -87,7 +87,9 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 .inline-add{background:rgba(168,230,61,.06);border:1px dashed var(--lime);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
 .inline-add-title{font-size:0.88rem;font-weight:700;color:var(--lime);letter-spacing:1px;margin-bottom:8px;}
 
-.courts-grid{display:flex;flex-direction:column;gap:14px;margin-bottom:14px;}
+.courts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px;}
+/* コートが横並びで細くなったら、チームを縦に積む（ちびノートで3コート同時に見るため） */
+.courts-grid{container:cgrid/inline-size;}.court-body{container:cbody/inline-size;}
 .court-card{background:var(--dark);border:2px solid var(--green);border-radius:16px;overflow:hidden;animation:slideIn .4s ease forwards;opacity:0;transform:translateY(20px);}
 @keyframes slideIn{to{opacity:1;transform:translateY(0);}}
 .court-header{background:var(--green);padding:9px 15px;display:flex;justify-content:space-between;align-items:center;}
@@ -144,14 +146,25 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 .gender-radio:has(input:checked){border-color:var(--lime);background:rgba(168,230,61,.1);color:var(--lime);font-weight:700;}
 .gender-m{color:#7ac0ff;} .gender-f{color:#ffaacc;}
 @media(max-width:480px){header h1{font-size:1.6rem;}.courts-grid{grid-template-columns:1fr;}}
+.zoom-ctrl{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.zoom-ctrl button{background:rgba(0,0,0,.25);border:1px solid var(--lime);color:var(--lime);border-radius:8px;font-size:1.1rem;font-weight:900;width:38px;height:34px;cursor:pointer;}
+.zoom-ctrl span{color:var(--lime);font-size:.85rem;font-weight:700;min-width:42px;text-align:center;}
+.btn-undo{background:rgba(245,230,66,.15);border:1px solid var(--yellow);color:var(--yellow);padding:10px 15px;font-size:0.95rem;}
+@container cgrid (min-width:534px){@container cbody (max-width:480px){.court-inner{grid-template-columns:1fr;}.vs-divider{font-size:1.4rem;padding:0;}}}
 </style>
 </head>
 <body>
 <header>
   <span class="ball-icon">🎾</span>
-  <h1>DOUBLES MATCHER Ver.5</h1>
+  <h1>DOUBLES MATCHER Ver.6</h1>
+  <div class="zoom-ctrl" title="画面の表示サイズ">
+    <button onclick="changeZoom(-1)">－</button>
+    <span id="zoom-label">100%</span>
+    <button onclick="changeZoom(1)">＋</button>
+  </div>
 </header>
 <div class="container">
+  <div id="restore-banner" style="display:none;background:rgba(240,160,48,.15);border:1px solid var(--orange);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:.85rem;color:var(--orange);"></div>
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('match',this)">🏆 試合</button>
     <button class="tab-btn" onclick="switchTab('members',this)">👥 メンバー</button>
@@ -186,9 +199,12 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
           <select id="quick-level"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3" selected>Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select>
           <button class="btn btn-primary" onclick="quickAddMember()">参加</button>
         </div>
+        <div id="quick-added-msg" style="display:none;font-size:.85rem;font-weight:700;color:var(--lime);margin-top:8px;"></div>
       </div>
-      <div id="attend-count" style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;"></div>
+      <div id="attend-count" style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;"></div>
+      <div id="attend-names" style="font-size:0.8rem;color:var(--text);background:rgba(168,230,61,.05);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.7;"></div>
       <button class="btn btn-generate" onclick="generateMatches()">🎲 組み合わせを生成</button>
+      <button id="undo-top" class="btn btn-undo" onclick="undoGenerate()" style="display:none;width:100%;justify-content:center;margin-top:8px;">↩ やり直し（生成する前に戻す）</button>
     </div>
     <div id="result-area"></div>
   </div>
@@ -215,7 +231,10 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
       <div id="today-members" class="member-grid"></div>
     </div>
     <div class="card">
-      <div class="card-title">👥 登録メンバー <span id="member-total" style="color:var(--muted);font-size:0.78rem;"></span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+        <div class="card-title" style="margin:0;">👥 登録メンバー <span id="member-total" style="color:var(--muted);font-size:0.78rem;"></span></div>
+        <button class="btn btn-secondary" onclick="openRestore()" style="font-size:0.75rem;flex-shrink:0;">🛟 メンバー復元</button>
+      </div>
       <div id="member-list" class="member-grid"></div>
     </div>
     <div class="card" style="border-color:rgba(168,230,61,.3);">
@@ -304,7 +323,7 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
       <div style="font-size:0.82rem;color:var(--muted);line-height:1.8;">
         🔵 <b style="color:#aadaff;">固定ペア</b>：生成時に必ず同じチームになります。<br>
         🔴 <b style="color:#ffaaaa;">排除ペア</b>：できるかぎり同じチームにしません。回避できない場合は警告を表示します。<br>
-        🟠 <b style="color:var(--orange);">コート固定</b>：できるかぎりそのコート番号に配置されます（優先的にプレイもします）。欠席時や定員超過などで配置できない場合は自動調整され、その旨を警告表示します。
+        🟠 <b style="color:var(--orange);">コート固定</b>：できるかぎりそのコート番号に配置されます。プレイ・待機の回数は他の人と平等のまま、プレイする回だけ固定コートに入ります。欠席時や定員超過などで配置できない場合は自動調整され、その旨を警告表示します。
       </div>
     </div>
   </div>
@@ -319,11 +338,11 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
     <div class="card">
       <div class="round-header">
         <div class="card-title" style="margin:0;">📋 ラウンド履歴</div>
-        <button class="btn btn-secondary" onclick="clearHistory()" style="font-size:0.75rem;">履歴クリア</button>
+        <button class="btn btn-secondary" onclick="clearHistory()" style="font-size:0.75rem;">履歴クリア（メンバーは残る）</button>
       </div>
       <div id="history-list"></div>
       <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">
-        <button class="btn btn-red" onclick="resetMembers()" style="font-size:0.75rem;">⚠ メンバーを初期状態に戻す</button>
+        <button class="btn btn-red" onclick="resetMembers()" style="font-size:0.75rem;">⚠ 履歴・ペア設定をすべて初期化（メンバーは残る）</button>
       </div>
     </div>
   </div>
@@ -331,7 +350,29 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 
 <script>
 // ===== STATE =====
-let members     = JSON.parse(localStorage.getItem('tmd-members')  || '[]');
+let restoredFromBackup = 0;
+
+// メンバーの読み込み。本体が空ならバックアップ(tmd-members-bak)から自動復元する
+function loadMembers() {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem('tmd-members') || '[]'); } catch(e) { list = []; }
+  if (Array.isArray(list) && list.length) return list;
+  // 「初期状態に戻す」を意図的に押した直後は自動復元しない（バックアップ自体は残す）
+  if (localStorage.getItem('tmd-reset-intent')) {
+    localStorage.removeItem('tmd-reset-intent');
+    return [];
+  }
+  let bak = [];
+  try { bak = JSON.parse(localStorage.getItem('tmd-members-bak') || '[]'); } catch(e) { bak = []; }
+  if (Array.isArray(bak) && bak.length) {
+    console.warn('メンバーが空だったためバックアップから復元しました', bak.length);
+    restoredFromBackup = bak.length;
+    return bak;
+  }
+  return [];
+}
+
+let members     = loadMembers();
 let gameHistory = JSON.parse(localStorage.getItem('tmd-history')  || '[]');
 let pairHist    = JSON.parse(localStorage.getItem('tmd-phist')    || '{}');
 let playHist    = JSON.parse(localStorage.getItem('tmd-playhist') || '{}');
@@ -493,9 +534,8 @@ function importMembersJson(event) {
   reader.readAsText(file);
 }
 
-// Seed default members
-if (!members.length) {
-  const defaults=[
+// 名簿の原本（初回シード＋復元モーダルの「名簿から戻す」で使う）
+const DEFAULT_MEMBERS=[
     {name:'田中一郎', gender:'m'},{name:'佐藤花子', gender:'f'},{name:'鈴木幸子', gender:'f'},
     {name:'山田美咲', gender:'f'},{name:'伊藤健太', gender:'m'},{name:'渡辺由美', gender:'f'},
     {name:'中村大輔', gender:'m'},{name:'小林浩二', gender:'m'},{name:'加藤博', gender:'m'},
@@ -508,22 +548,167 @@ if (!members.length) {
     {name:'野口奈津美', gender:'f'},{name:'長谷川誠', gender:'m'},{name:'原田聡', gender:'m'},
     {name:'三浦茂', gender:'m'},{name:'高橋勇', gender:'m'},{name:'内田優子', gender:'f'},
     {name:'ゲスト1', gender:'m'},{name:'ゲスト2', gender:'m'},{name:'ゲスト3', gender:'f'},
-  ];
-  defaults.forEach((d,i)=>members.push({id:100+i, name:d.name, level:3, gender:d.gender, attending:false, temp:false}));
+];
+
+// Seed default members
+if (!members.length) {
+  DEFAULT_MEMBERS.forEach((d,i)=>members.push({id:100+i, name:d.name, level:3, gender:d.gender, attending:false, temp:false}));
   saveAll();
 }
 
 function saveAll() {
-  localStorage.setItem('tmd-members',   JSON.stringify(members));
-  localStorage.setItem('tmd-history',   JSON.stringify(gameHistory));
-  localStorage.setItem('tmd-phist',     JSON.stringify(pairHist));
-  localStorage.setItem('tmd-playhist',  JSON.stringify(playHist));
-  localStorage.setItem('tmd-typehist',  JSON.stringify(typeHist));
-  localStorage.setItem('tmd-courthist', JSON.stringify(courtHist));
-  localStorage.setItem('tmd-courtgrouphist', JSON.stringify(courtGroupHist));
-  localStorage.setItem('tmd-fixed',     JSON.stringify(fixedPairs));
-  localStorage.setItem('tmd-excl',      JSON.stringify(exclPairs));
-  localStorage.setItem('tmd-courtfixed',JSON.stringify(courtFixed));
+  // 1件の保存が失敗（容量超過等）しても他の保存を止めない
+  const put = (k, v) => {
+    try { localStorage.setItem(k, JSON.stringify(v)); }
+    catch(e) { console.warn('保存に失敗しました:', k, e); }
+  };
+  put('tmd-members', members);
+  // メンバーは常にバックアップを残す（空のときは上書きしない）
+  if (Array.isArray(members) && members.length) {
+    put('tmd-members-bak', members);
+    saveSnapshot(put);
+    updateRoster(put);
+  }
+  put('tmd-history',   gameHistory);
+  put('tmd-phist',     pairHist);
+  put('tmd-playhist',  playHist);
+  put('tmd-typehist',  typeHist);
+  put('tmd-courthist', courtHist);
+  put('tmd-courtgrouphist', courtGroupHist);
+  put('tmd-fixed',     fixedPairs);
+  put('tmd-excl',      exclPairs);
+  put('tmd-courtfixed',courtFixed);
+}
+
+// ===== 永久名簿 (tmd-roster) =====
+// 一度でも登録された人を記録し続ける台帳。ここからは自動では消えない。
+// 「初期状態に戻す」でもクリアされないので、アプリだけで誰でも戻せる。
+function loadRoster() {
+  let r = [];
+  try { r = JSON.parse(localStorage.getItem('tmd-roster') || '[]'); } catch(e) { r = []; }
+  if (!Array.isArray(r)) r = [];
+  // ファイルの初期名簿にしか居ない人も候補に含める
+  DEFAULT_MEMBERS.forEach(d => {
+    if (!r.some(x => x.name === d.name)) r.push({name:d.name, gender:d.gender, level:3});
+  });
+  return r;
+}
+
+function updateRoster(put) {
+  const roster = loadRoster();
+  let changed = false;
+  members.forEach(m => {
+    const ex = roster.find(r => r.name === m.name);
+    if (!ex) {
+      roster.push({name:m.name, gender:m.gender||'m', level:m.level||3});
+      changed = true;
+    } else if (ex.gender !== (m.gender||'m') || ex.level !== (m.level||3)) {
+      ex.gender = m.gender||'m'; ex.level = m.level||3;  // 編集内容を台帳にも反映
+      changed = true;
+    }
+  });
+  if (changed) put('tmd-roster', roster);
+}
+
+// 台帳から1人消す（もう来ない人を候補から外したいとき用）
+function forgetFromRoster(name) {
+  if (!confirm(`「${name}」を名簿の履歴から消しますか？\n（今後この一覧に出なくなります）`)) return;
+  const roster = loadRoster().filter(r => r.name !== name);
+  try { localStorage.setItem('tmd-roster', JSON.stringify(roster)); } catch(e) {}
+  openRestore();
+}
+
+// ===== MEMBER SNAPSHOTS (誤削除からの復元用) =====
+// メンバー構成が変わるたびに世代を残す。最大10件。
+function loadSnapshots() {
+  try {
+    const s = JSON.parse(localStorage.getItem('tmd-members-snaps') || '[]');
+    return Array.isArray(s) ? s : [];
+  } catch(e) { return []; }
+}
+
+function saveSnapshot(put) {
+  const snaps = loadSnapshots();
+  const sig = members.map(m=>m.name).sort().join('|');
+  if (snaps.length && snaps[0].sig === sig) return;  // 構成が同じなら残さない
+  const d = new Date();
+  const p2 = n => String(n).padStart(2,'0');
+  snaps.unshift({
+    sig,
+    time: `${d.getMonth()+1}/${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}`,
+    list: members.map(m=>({id:m.id, name:m.name, level:m.level, gender:m.gender||'m', attending:false, temp:false}))
+  });
+  put('tmd-members-snaps', snaps.slice(0, 10));
+}
+
+function openRestore() {
+  const snaps = loadSnapshots();
+  const el = document.getElementById('restore-list');
+  if (!snaps.length) {
+    el.innerHTML = '<div style="font-size:.8rem;color:var(--muted);">まだバックアップがありません</div>';
+  } else {
+    el.innerHTML = snaps.map((s,i)=>{
+      const missing = s.list.filter(p => !members.some(m => m.name === p.name));
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.9rem;font-weight:700;">${s.time}　${s.list.length}人</div>
+          <div style="font-size:.72rem;color:${missing.length?'var(--orange)':'var(--muted)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${missing.length ? '今いない人: ' + missing.map(p=>p.name).join('、') : '現在と同じ顔ぶれ'}
+          </div>
+        </div>
+        <button class="btn btn-sm ${missing.length?'btn-primary':''}" onclick="restoreSnapshot(${i})" ${missing.length?'':'disabled style="opacity:.4;"'}>戻す</button>
+      </div>`;
+    }).join('');
+  }
+  // 永久名簿に居て、今いない人（アプリで追加した人もすべてここに載る）
+  const el2 = document.getElementById('restore-defaults');
+  const gone = loadRoster().filter(d => !members.some(m => m.name === d.name));
+  el2.innerHTML = gone.length
+    ? `<button class="btn btn-primary btn-sm" onclick="restoreAllFromRoster()" style="margin:0 0 8px 0;">⏪ ${gone.length}人まとめて戻す</button>`
+      + gone.map(d=>`<span style="display:inline-flex;align-items:center;margin:3px 6px 0 0;">
+          <button class="btn btn-sm" onclick="restoreDefault('${d.name}')">＋ ${d.name}</button>
+          <button class="btn btn-sm" onclick="forgetFromRoster('${d.name}')" title="今後この一覧に出さない" style="padding:4px 6px;opacity:.5;">✕</button>
+        </span>`).join('')
+    : '<div style="font-size:.78rem;color:var(--muted);">これまで登録された全員がそろっています</div>';
+  document.getElementById('restore-modal').style.display = 'flex';
+}
+
+function closeRestore() {
+  document.getElementById('restore-modal').style.display = 'none';
+}
+
+// 現在いない人だけを追加する（今のメンバーは消さない）
+function restoreSnapshot(i) {
+  const s = loadSnapshots()[i];
+  if (!s) return;
+  const missing = s.list.filter(p => !members.some(m => m.name === p.name));
+  if (!missing.length) return;
+  if (!confirm(`${missing.map(p=>p.name).join('、')}\nの${missing.length}人を戻します。よろしいですか？`)) return;
+  let nextId = Date.now();
+  missing.forEach(p => {
+    if (members.some(m => m.id === p.id)) p.id = nextId++;
+    members.push(p);
+  });
+  saveAll(); closeRestore(); renderMemberList(); renderPairRules();
+  alert(`${missing.length}人を復元しました。`);
+}
+
+// 永久名簿から1人だけ戻す
+function restoreDefault(name) {
+  const d = loadRoster().find(x => x.name === name);
+  if (!d || members.some(m => m.name === name)) return;
+  members.push({id:Date.now(), name:d.name, level:d.level||3, gender:d.gender||'m', attending:false, temp:false});
+  saveAll(); renderMemberList(); renderPairRules(); renderAttendance(); openRestore();
+}
+
+// 永久名簿にいて今いない人を全員戻す
+function restoreAllFromRoster() {
+  const gone = loadRoster().filter(d => !members.some(m => m.name === d.name));
+  if (!gone.length) return;
+  if (!confirm(`${gone.map(d=>d.name).join('、')}\nの${gone.length}人を戻します。よろしいですか？`)) return;
+  let nextId = Date.now();
+  gone.forEach(d => members.push({id:nextId++, name:d.name, level:d.level||3, gender:d.gender||'m', attending:false, temp:false}));
+  saveAll(); renderMemberList(); renderPairRules(); renderAttendance(); openRestore();
 }
 
 // ===== TABS =====
@@ -572,13 +757,34 @@ function quickAddMember() {
     const pvals=attending.map(m=>playHist[m.id]||0);
     playHist[newId]=Math.round(pvals.reduce((a,b)=>a+b,0)/pvals.length);
   }
+  // 同名がすでに居る場合は参加ONにするだけ（二重登録を防ぐ）
+  const dup=members.find(m=>m.name===name);
+  if(dup){
+    dup.attending=true;
+    saveAll(); document.getElementById('quick-name').value='';
+    renderMatchTab(); renderAttendance();
+    showQuickAdded(`✅ ${name} さんはすでに登録済みです。本日の参加をONにしました（参加${members.filter(m=>m.attending).length}人）`);
+    return;
+  }
   members.push({id:newId, name, gender, level:parseInt(document.getElementById('quick-level').value), attending:true, temp:true});
   saveAll(); document.getElementById('quick-name').value='';
   renderMatchTab(); renderAttendance();
+  showQuickAdded(`✅ ${name} さんを本日の参加者に追加しました（参加${members.filter(m=>m.attending).length}人）。次の組み合わせから入ります。`);
+}
+
+// 途中参加の追加結果をその場に表示する
+function showQuickAdded(msg) {
+  const el=document.getElementById('quick-added-msg');
+  if(!el) return;
+  el.textContent=msg;
+  el.style.display='block';
+  clearTimeout(showQuickAdded._t);
+  showQuickAdded._t=setTimeout(()=>{ el.style.display='none'; }, 6000);
 }
 
 function removeMember(id) {
-  if(!confirm('削除しますか？')) return;
+  const _t=members.find(m=>m.id===id);
+  if(!confirm(`「${_t?_t.name:''}」をメンバーから削除しますか？`)) return;
   members=members.filter(m=>m.id!==id);
   fixedPairs=fixedPairs.filter(p=>p.a!==id&&p.b!==id);
   exclPairs =exclPairs.filter(p=>p.a!==id&&p.b!==id);
@@ -715,6 +921,15 @@ function renderMatchTab() {
   const countEl=document.getElementById('attend-count');
   if(countEl) countEl.textContent=
     `参加: ${attending.length}人（♂${males} ♀${females}）　プレイ: ${Math.min(attending.length,play)}人　待機: ${wait}人`;
+  // 誰が参加ONになっているかを試合タブでも見えるようにする（★=途中参加）
+  const namesEl=document.getElementById('attend-names');
+  if(namesEl) {
+    namesEl.innerHTML = attending.length
+      ? '<span style="color:var(--muted);">本日の参加者：</span>' + attending.map(m=>
+          `<span style="white-space:nowrap;margin-right:8px;">${m.gender==='f'?'♀':'♂'}${m.name}${m.temp?'<span style="color:var(--orange);">★</span>':''}</span>`
+        ).join('')
+      : '<span style="color:var(--orange);">参加者が0人です。「メンバー」タブの「📅 本日の参加者」で参加する人をONにしてください。</span>';
+  }
   const descs={
     none:'性別を考慮せずランダムに組み合わせます。',
     mixed:'できるだけ男女1名ずつのペアを作り、混合ダブルスを優先します。',
@@ -865,6 +1080,53 @@ function renderExcludedList() {
 }
 
 // ===== GENERATE =====
+// ===== やり直し（生成前に戻す） =====
+// 生成・再生成の直前の状態を積んでおき、↩で1つずつ戻す。メンバーや参加ON/OFFは戻さない。
+let undoStack = [];
+function pushUndo() {
+  undoStack.push(JSON.parse(JSON.stringify({
+    gameHistory, pairHist, playHist, typeHist, courtHist, courtGroupHist, curRound,
+    prevWaitIds:[...prevWaitIds], prevPairKeys:[...prevPairKeys],
+    curMatches, curWaiting, curWarnings
+  })));
+  if (undoStack.length > 20) undoStack.shift();
+  updateUndoBtn();
+}
+function undoGenerate() {
+  const s = undoStack.pop();
+  if (!s) return;
+  ({gameHistory, pairHist, playHist, typeHist, courtHist, courtGroupHist, curRound} = s);
+  prevWaitIds = new Set(s.prevWaitIds); prevPairKeys = new Set(s.prevPairKeys);
+  // 画面上の選手はメンバー本体のオブジェクトに付け直す（入れ替え・再描画のため）
+  const relink = p => members.find(m => m.id === p.id) || p;
+  curMatches = s.curMatches.map(m => ({...m, team1:m.team1.map(relink), team2:m.team2.map(relink)}));
+  curWaiting = s.curWaiting.map(relink); curWarnings = s.curWarnings;
+  swapSel = null; saveAll(); updateStats();
+  if (curMatches.length) drawResult(); else document.getElementById('result-area').innerHTML = '';
+  updateUndoBtn();
+}
+function updateUndoBtn() {
+  const b = document.getElementById('undo-top');
+  if (b) b.style.display = undoStack.length ? 'flex' : 'none';
+}
+
+// ===== 表示サイズ（ちびノート対策） =====
+const ZOOMS = [50, 60, 70, 80, 90, 100, 110, 125];
+let zoomPct = 100;
+try { zoomPct = parseInt(localStorage.getItem('tmd-zoom')) || 100; } catch(e) {}
+function applyZoom() {
+  document.body.style.zoom = zoomPct / 100;
+  const l = document.getElementById('zoom-label');
+  if (l) l.textContent = zoomPct + '%';
+}
+function changeZoom(dir) {
+  let i = ZOOMS.indexOf(zoomPct);
+  if (i < 0) i = ZOOMS.indexOf(100);
+  zoomPct = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + dir))];
+  try { localStorage.setItem('tmd-zoom', zoomPct); } catch(e) {}
+  applyZoom();
+}
+
 function generateMatches() {
   const courts=parseInt(document.getElementById('court-count').value)||2;
   const attending=members.filter(m=>m.attending);
@@ -876,6 +1138,7 @@ function generateMatches() {
 
   const result=buildMatches(attending, courts, activeFixed, activeCourtFixed);
   if(!result){alert('有効な組み合わせを生成できませんでした。制約を見直してください。');return;}
+  pushUndo();
 
   result.matches.forEach(m=>{
     recPair(m.team1); recPair(m.team2); recCourt(m); recCourtGroup(m);
@@ -1362,6 +1625,7 @@ function drawResult() {
 
   html+=`<div style="display:flex;gap:7px;margin-top:10px;">
     <button class="btn btn-secondary" onclick="regenResult()" style="flex:1;">🔄 再生成</button>
+    <button class="btn btn-undo" onclick="undoGenerate()" style="flex:1;">↩ やり直し</button>
     <button class="btn btn-orange" onclick="goHistory()" style="flex:1;">📋 履歴</button>
   </div>
   <div class="qr-note">💡 待機回数が多い人から優先的にコートに入ります</div>
@@ -1472,6 +1736,7 @@ function syncAfterSwap(){
 }
 
 function regenResult(){
+  pushUndo();
   // 再生成は「同じラウンドのやり直し」なので、
   // 前回の generateMatches で記録した playHist/pairHist/gameHistory を一つ戻す
   if(gameHistory.length > 0 && curRound > 1) {
@@ -1562,13 +1827,19 @@ function updateStats(){
 
 function clearHistory(){
   if(!confirm('履歴とペア記録をすべてクリアしますか？')) return;
-  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; courtGroupHist={}; curRound=1; saveAll(); renderHistory();
+  gameHistory=[]; pairHist={}; playHist={}; typeHist={}; courtHist={}; courtGroupHist={}; curRound=1; saveAll(); renderHistory(); undoStack=[]; updateUndoBtn();
   document.getElementById('result-area').innerHTML='';
 }
 
 function resetMembers(){
-  if(!confirm('メンバーをファイルの初期リストに戻します。\n現在のメンバー・履歴はすべて消えます。よろしいですか？')) return;
-  localStorage.removeItem('tmd-members');
+  // 履歴・ペア設定は初期化するが、メンバー（アプリで追加した人を含む）は消さない。
+  // 全員の参加をOFFにするだけ。
+  if(!confirm('試合の履歴とペア設定（固定・排除・コート固定）をすべて初期化します。\nメンバーは消えません（アプリで追加した人も残ります）。\nよろしいですか？')) return;
+  members.forEach(m => { m.attending = false; m.temp = false; });
+  try {
+    localStorage.setItem('tmd-members', JSON.stringify(members));
+    localStorage.setItem('tmd-members-bak', JSON.stringify(members));
+  } catch(e) { console.warn('メンバー保存に失敗', e); }
   localStorage.removeItem('tmd-history');
   localStorage.removeItem('tmd-phist');
   localStorage.removeItem('tmd-playhist');
@@ -1588,9 +1859,29 @@ if(needsMigration){
   members.forEach(m=>{ if(!m.gender) m.gender='m'; });
   saveAll();
 }
+applyZoom();
 renderMatchTab();
 renderAttendance();
+
+// バックアップから復元したときの通知（起動直後のalertは画面を固めるので使わない）
+if (restoredFromBackup) {
+  saveAll();  // 復元した状態を保存し直す
+  const b = document.getElementById('restore-banner');
+  b.textContent = `⚠️ メンバーデータが空になっていたため、バックアップから ${restoredFromBackup}人 を自動復元しました。`;
+  b.style.display = 'block';
+}
 </script>
+<!-- RESTORE MEMBERS MODAL -->
+<div id="restore-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#1a2a1a;border:2px solid var(--lime);border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;">
+    <div style="font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--lime);margin-bottom:6px;">🛟 メンバー復元</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">過去のメンバー構成から、今いない人だけを戻します。現在のメンバーは消えません。</div>
+    <div id="restore-list"></div>
+    <div style="font-size:.85rem;font-weight:700;color:var(--yellow);margin:16px 0 6px;">📇 名簿から戻す（これまで登録された人のうち、今いない人）</div>
+    <div id="restore-defaults"></div>
+    <button class="btn btn-secondary" onclick="closeRestore()" style="width:100%;margin-top:16px;">閉じる</button>
+  </div>
+</div>
 <!-- EDIT MEMBER MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:#1a2a1a;border:2px solid var(--lime);border-radius:16px;padding:20px;width:100%;max-width:360px;">
