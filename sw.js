@@ -4,7 +4,7 @@
 //       ダブルス組み合わせアプリはオフラインでも動くよう事前キャッシュ。
 // ※ サイトを更新しても画面が変わらない問題を防ぐため、network-first にしています。
 //   大きく作り替えたときは下の CACHE_NAME の数字を1つ上げてください（古いキャッシュが消えます）。
-const CACHE_NAME = 'pitin-v3';
+const CACHE_NAME = 'pitin-v4';
 const ASSETS = [
   '/pitin/tennis-doubles_ver3.html',
   '/pitin/manifest.json'

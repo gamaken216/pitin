@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎾 DOUBLES MATCHER Ver.6 [DEMO]</title>
+<title>🎾 DOUBLES MATCHER Ver.7 [DEMO]</title>
 <meta name="description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ Doubles Matcher のデモ版。富山のフレッシュテニスグループ ピットインが制作。">
 <link rel="canonical" href="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="フレッシュテニスクラブ ピットイン">
-<meta property="og:title" content="DOUBLES MATCHER Ver.6 | ダブルス組み合わせアプリ">
+<meta property="og:title" content="DOUBLES MATCHER Ver.7 | ダブルス組み合わせアプリ">
 <meta property="og:description" content="テニスのダブルス対戦を自動で公平に組み合わせる無料Webアプリ。">
 <meta property="og:url" content="https://gamaken216.github.io/pitin/tennis-doubles.html">
 <meta property="og:image" content="https://gamaken216.github.io/pitin/app-screenshot.png">
@@ -156,7 +156,7 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
 <body>
 <header>
   <span class="ball-icon">🎾</span>
-  <h1>DOUBLES MATCHER Ver.6</h1>
+  <h1>DOUBLES MATCHER Ver.7</h1>
   <div class="zoom-ctrl" title="画面の表示サイズ">
     <button onclick="changeZoom(-1)">－</button>
     <span id="zoom-label">100%</span>
@@ -193,6 +193,11 @@ select{background:var(--dark);border:1px solid var(--border);border-radius:8px;c
       </div>
       <div class="inline-add">
         <div class="inline-add-title">➕ 途中参加・一時追加</div>
+        <div class="input-row" style="margin-bottom:8px;">
+          <select id="quick-registered" style="flex:1;"></select>
+          <button class="btn btn-primary" onclick="joinRegistered()">参加</button>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px;">登録メンバーにいない人は名前を入力：</div>
         <div class="input-row">
           <input type="text" id="quick-name" placeholder="名前..." maxlength="10" style="flex:1;">
           <select id="quick-gender"><option value="m">男性</option><option value="f">女性</option></select>
@@ -749,27 +754,60 @@ function quickAddMember() {
   const name=document.getElementById('quick-name').value.trim();
   if(!name) return;
   const gender=document.getElementById('quick-gender').value;
+  // 同名がすでに居る場合は参加ONにするだけ（二重登録を防ぐ）
+  // 参加ON＋playHistの平均初期化はtoggleAttendに任せる
+  const dup=members.find(m=>m.name===name);
+  if(dup){
+    if(!dup.attending) toggleAttend(dup.id);
+    document.getElementById('quick-name').value='';
+    renderMatchTab();
+    showQuickAdded(`✅ ${name} さんはすでに登録済みです。本日の参加をONにしました（参加${members.filter(m=>m.attending).length}人）`);
+    return;
+  }
   const newId=Date.now();
-  // 途中参加者には既存参加者の平均waitHistを初期値として設定
+  // 途中参加者には既存参加者の平均playHistを初期値として設定
   // → 新メンバーが不公平に連続待機にならないようにする
   const attending=members.filter(m=>m.attending);
   if(attending.length > 0) {
     const pvals=attending.map(m=>playHist[m.id]||0);
     playHist[newId]=Math.round(pvals.reduce((a,b)=>a+b,0)/pvals.length);
   }
-  // 同名がすでに居る場合は参加ONにするだけ（二重登録を防ぐ）
-  const dup=members.find(m=>m.name===name);
-  if(dup){
-    dup.attending=true;
-    saveAll(); document.getElementById('quick-name').value='';
-    renderMatchTab(); renderAttendance();
-    showQuickAdded(`✅ ${name} さんはすでに登録済みです。本日の参加をONにしました（参加${members.filter(m=>m.attending).length}人）`);
-    return;
-  }
   members.push({id:newId, name, gender, level:parseInt(document.getElementById('quick-level').value), attending:true, temp:true});
   saveAll(); document.getElementById('quick-name').value='';
   renderMatchTab(); renderAttendance();
   showQuickAdded(`✅ ${name} さんを本日の参加者に追加しました（参加${members.filter(m=>m.attending).length}人）。次の組み合わせから入ります。`);
+}
+
+// 登録メンバー（参加OFFの人）を選んで途中参加させる
+function renderQuickRegistered() {
+  const sel=document.getElementById('quick-registered');
+  if(!sel) return;
+  const off=members.filter(m=>!m.attending);
+  sel.innerHTML = off.length
+    ? '<option value="">登録メンバーから選ぶ...</option>' +
+      off.map(m=>`<option value="${m.id}">${m.gender==='f'?'♀':'♂'}${m.name}</option>`).join('')
+    : '<option value="">（参加OFFの登録メンバーはいません）</option>';
+}
+
+function joinRegistered() {
+  const sel=document.getElementById('quick-registered');
+  const id=Number(sel && sel.value);
+  if(!id) return;
+  const m=members.find(x=>x.id===id);
+  if(!m || m.attending) return;
+  toggleAttend(id);   // 参加ON＋playHistの平均初期化はtoggleAttendに任せる
+  renderMatchTab();
+  showQuickAdded(`✅ ${m.name} さんを本日の参加者に追加しました（参加${members.filter(x=>x.attending).length}人）。次の組み合わせから入ります。`);
+}
+
+// 途中退出：参加OFFにするだけ（メンバー登録・試合履歴は残る）
+function leaveMember(id) {
+  const m=members.find(x=>x.id===id);
+  if(!m || !m.attending) return;
+  if(!confirm(`${m.name} さんを途中退出にしますか？\n次の組み合わせから外れます（メンバー登録は残ります）。`)) return;
+  toggleAttend(id);
+  renderMatchTab();
+  showQuickAdded(`👋 ${m.name} さんを退出にしました（参加${members.filter(x=>x.attending).length}人）。次の組み合わせから外れます。`);
 }
 
 // 途中参加の追加結果をその場に表示する
@@ -925,8 +963,8 @@ function renderMatchTab() {
   const namesEl=document.getElementById('attend-names');
   if(namesEl) {
     namesEl.innerHTML = attending.length
-      ? '<span style="color:var(--muted);">本日の参加者：</span>' + attending.map(m=>
-          `<span style="white-space:nowrap;margin-right:8px;">${m.gender==='f'?'♀':'♂'}${m.name}${m.temp?'<span style="color:var(--orange);">★</span>':''}</span>`
+      ? '<span style="color:var(--muted);">本日の参加者（✕で途中退出）：</span>' + attending.map(m=>
+          `<span style="white-space:nowrap;margin-right:8px;">${m.gender==='f'?'♀':'♂'}${m.name}${m.temp?'<span style="color:var(--orange);">★</span>':''}<button onclick="leaveMember(${m.id})" title="途中退出" style="margin-left:3px;padding:0 6px;font-size:.75rem;line-height:1.4;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;">✕</button></span>`
         ).join('')
       : '<span style="color:var(--orange);">参加者が0人です。「メンバー」タブの「📅 本日の参加者」で参加する人をONにしてください。</span>';
   }
@@ -958,6 +996,7 @@ function renderAttendance() {
   const females=attending.filter(m=>m.gender==='f').length;
   const c2=document.getElementById('attend-count-members');
   if(c2) c2.textContent=`${attending.length}人参加（♂${males} ♀${females}）`;
+  renderQuickRegistered();
 }
 
 function toggleAttend(id){
