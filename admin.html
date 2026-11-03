@@ -44,6 +44,11 @@
     details .body { margin-top:1rem; font-size:.85rem; color:#46493f; line-height:1.8; }
     #fallbackEntry { width:100%; min-height:140px; font-family:monospace; font-size:.8rem; margin-top:.6rem; }
     .warn { color:#c0492f; font-weight:700; }
+    #pushReminder { display:none; margin-top:1.2rem; padding:1.2rem 1.3rem; background:#fff4e0; border:3px solid #e08a00; color:#5a3500; }
+    #pushReminder.show { display:block; }
+    #pushReminder h2 { font-size:1.2rem; font-weight:900; margin-bottom:.6rem; color:#b45f00; }
+    #pushReminder ol { margin:.2rem 0 .6rem 1.4rem; font-size:.92rem; line-height:1.9; }
+    #pushReminder .small { font-size:.8rem; color:#7a5a2a; }
   </style>
 </head>
 <body>
@@ -54,7 +59,7 @@
   <div class="note">
     🔒 このページは<strong>あなたのPCの中だけ</strong>で動きます（サーバーには何も送りません）。<br>
     フォームに入力して「保存して反映」を押すと、<code>blog/</code> に記事ページが作られ、<code>posts.js</code> に自動登録されます。<br>
-    そのあとは、いつも通り <strong>GitHub Desktop でコミット → Vercel が自動公開</strong>。<br>
+    そのあと <strong>必ず GitHub Desktop でコミット → プッシュ</strong>してください。プッシュしないとホームページに出ません（GitHub Pages に数分で反映）。<br>
     <span class="warn">※ Chrome または Edge で開いてください（フォルダ書き込み機能を使います）。</span>
   </div>
 
@@ -89,6 +94,19 @@
   </div>
 
   <div id="status"></div>
+
+  <div id="pushReminder">
+    <h2>⚠️ まだ公開されていません — GitHub Desktop でプッシュしてください</h2>
+    <ol>
+      <li>GitHub Desktop を開き、左上の Current repository が <b>pitin</b> になっているか確認</li>
+      <li>左下の Summary に「ブログ更新」などと書いて <b>Commit to main</b></li>
+      <li>上の <b>Push origin</b> を押す</li>
+    </ol>
+    <div class="small">数分後に https://gamaken216.github.io/pitin/ のブログ欄に出ます。</div>
+  </div>
+
+  <div class="step">Step 3 — GitHub Desktop でプッシュ（必須）</div>
+  <div class="hint" style="font-size:.84rem;">保存しただけではホームページに出ません。GitHub Desktop で <b>Commit to main</b> → <b>Push origin</b> まで行ってください。</div>
 
   <details>
     <summary>うまく動かないとき（手動で使う方法）</summary>
@@ -290,8 +308,8 @@ $('saveBtn').addEventListener('click', async () => {
       '✅ 反映しました。\n' +
       '・blog/' + d.fileName + ' を作成\n' +
       (d.imgName ? '・blog/' + d.imgName + ' を保存\n' : '') +
-      '・posts.js の先頭に登録\n\n' +
-      'このあと GitHub Desktop でコミット → Vercel が自動公開します。', true);
+      '・posts.js の先頭に登録', true);
+    showPushReminder();
     // フォームを軽くリセット（日付はそのまま）
     $('f-title').value=''; $('f-excerpt').value=''; $('f-body').value=''; $('f-image').value='';
   } catch(e){ showStatus('エラー：' + e.message, false); }
@@ -313,6 +331,7 @@ $('dlBtn').addEventListener('click', () => {
     a.href = URL.createObjectURL(blob); a.download = d.fileName; a.click();
     $('fallbackEntry').value = buildPostsEntry(d);
     showStatus('記事HTMLをダウンロードしました。下のテキストを posts.js に貼り付けてください（写真は手動で blog/ に入れて、名前を ' + (d.imgName||'（なし）') + ' にしてください）。', true);
+    showPushReminder();
   } catch(e){ showStatus(e.message, false); }
 });
 $('copyBtn').addEventListener('click', () => {
@@ -320,6 +339,12 @@ $('copyBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(t); showStatus('posts.js用テキストをコピーしました。', true);
   } catch(e){ showStatus(e.message, false); }
 });
+
+// 保存後に「プッシュしてください」の枠を出す
+function showPushReminder(){
+  const el = $('pushReminder'); el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
 
 function showStatus(msg, ok){
   const el = $('status'); el.textContent = msg; el.className = ok ? 'ok' : 'err';
